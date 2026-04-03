@@ -29861,7 +29861,9 @@
         ],
         "options": []
       }
-    ]
+    ],
+    "deleted": true,
+    "updatedAt": 1775197683336
   },
   {
     "studentId": "DRKS-6598",
