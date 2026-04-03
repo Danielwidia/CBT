@@ -61,10 +61,31 @@ async function ghReadFile(filePath) {
     const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`;
     const res  = await fetch(url, { headers: GH_HEADERS() });
     if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`GitHub read ${filePath}: HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`GitHub read metadata for ${filePath}: HTTP ${res.status}`);
     const json = await res.json();
-    const content = Buffer.from(json.content, 'base64').toString('utf8');
-    return { data: JSON.parse(content), sha: json.sha };
+    
+    // Fallback khusus untuk file > 1MB, GitHub tidak akan memberikan json.content
+    let contentStr = '';
+    if (json.content && json.encoding === 'base64') {
+        contentStr = Buffer.from(json.content, 'base64').toString('utf8');
+    } else if (json.download_url || json.git_url) {
+        // Ambil data langsung dari raw file jika ukurannya besar
+        const rawRes = await fetch(json.download_url || `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${filePath}`, { 
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
+        });
+        if (!rawRes.ok) throw new Error(`GitHub Read Raw ${filePath}: HTTP ${rawRes.status}`);
+        contentStr = await rawRes.text();
+    } else {
+        throw new Error(`File ${filePath} is too large and no download_url found (Size: ${json.size} bytes)`);
+    }
+
+    try {
+        const parsed = JSON.parse(contentStr);
+        return { data: parsed, sha: json.sha };
+    } catch (e) {
+        console.error(`Error parsing JSON for ${filePath}:`, e.message);
+        throw new Error(`Invalid JSON format in ${filePath}`);
+    }
 }
 
 async function ghWriteFile(filePath, data, sha) {
