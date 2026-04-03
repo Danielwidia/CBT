@@ -1,156 +1,216 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
 const multer = require('multer');
+const cors = require('cors');
 const { parseWordDocument } = require('./wordParser');
+
 const app = express();
-const os = require('os');
-
-// Standard Node.js environment paths
-// Root folder contains: server.js, wordParser.js, package.json, index.html, logo.png
-const rootPath = __dirname;
-
-console.log(`🚀 Server starting...`);
-console.log(`   Root path: ${rootPath}`);
-
-// Request logger for diagnostic purposes
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url} from ${req.ip}`);
-    next();
-});
-
-// Main entry point - serve index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(rootPath, 'index.html'));
-});
-
-// Serve logo.png explicitly for security (don't serve entire root)
-app.get('/logo.png', (req, res) => {
-    res.sendFile(path.join(rootPath, 'logo.png'));
-});
-
-// JSON body parser with limit for Large DB transfers
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Database and results files in root directory
-const DATA_FILE = path.join(process.cwd(), 'database.json');
+const rootPath = __dirname;
+
+// ─── Supabase Setup ───────────────────────────────────────────────────────────
+let supabase = null;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+if (SUPABASE_URL && SUPABASE_KEY) {
+    const { createClient } = require('@supabase/supabase-js');
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase connected:', SUPABASE_URL);
+} else {
+    console.log('⚠️  Supabase not configured – using local JSON files as fallback.');
+}
+
+// ─── Local File Paths (Fallback) ──────────────────────────────────────────────
+const DATA_FILE    = path.join(process.cwd(), 'database.json');
 const RESULTS_FILE = path.join(process.cwd(), 'results.json');
 
-function readDB() {
+// ─── Default DB structure ─────────────────────────────────────────────────────
+const DEFAULT_DB = {
+    subjects: [
+        { name: 'Pendidikan Agama', locked: false },
+        { name: 'Bahasa Indonesia', locked: false },
+        { name: 'Matematika',       locked: false },
+        { name: 'IPA',              locked: false },
+        { name: 'IPS',              locked: false },
+        { name: 'Bahasa Inggris',   locked: false }
+    ],
+    rombels:   ['VII', 'VIII', 'IX'],
+    questions: [],
+    students:  [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
+    results:   [],
+    schedules: [],
+    timeLimits: {}
+};
+
+// ─── Data Layer ───────────────────────────────────────────────────────────────
+
+/** Merge two results arrays, de-duplicating by (studentId, mapel, rombel, date) */
+function mergeResultsArrays(existing = [], incoming = []) {
+    const map = new Map();
+    const key = r => `${r.studentId||''}::${r.mapel||''}::${r.rombel||''}::${r.date||''}`;
+    existing.forEach(r => map.set(key(r), r));
+    incoming.forEach(r => {
+        const k = key(r);
+        map.set(k, map.has(k) ? Object.assign({}, map.get(k), r) : r);
+    });
+    return Array.from(map.values());
+}
+
+async function readDB() {
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('cbt_database')
+                .select('data')
+                .order('id', { ascending: false })
+                .limit(1)
+                .single();
+            if (error) throw error;
+            return data?.data ?? null;
+        } catch (e) {
+            console.error('Supabase readDB error:', e.message);
+            return null;
+        }
+    }
+    // fallback: local file
     try {
         if (!fs.existsSync(DATA_FILE)) return null;
         return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    } catch (err) {
-        return null;
-    }
+    } catch { return null; }
 }
 
-function writeDB(obj) {
+async function writeDB(obj) {
+    if (supabase) {
+        // Upsert: always update the single row (id=1)
+        const { error } = await supabase
+            .from('cbt_database')
+            .upsert({ id: 1, data: obj, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+        if (error) throw error;
+        return;
+    }
     fs.writeFileSync(DATA_FILE, JSON.stringify(obj, null, 2), 'utf8');
 }
 
-function readResults() {
+async function readResults() {
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('cbt_results')
+                .select('data')
+                .order('id', { ascending: true });
+            if (error) throw error;
+            return (data || []).map(row => row.data);
+        } catch (e) {
+            console.error('Supabase readResults error:', e.message);
+            return [];
+        }
+    }
     try {
         if (!fs.existsSync(RESULTS_FILE)) return [];
         return JSON.parse(fs.readFileSync(RESULTS_FILE, 'utf8'));
-    } catch (err) {
-        return [];
-    }
+    } catch { return []; }
 }
 
-function writeResults(results) {
+async function writeResults(results) {
+    if (supabase) {
+        // Strategy: clear all rows then re-insert (simple and reliable for this scale)
+        const { error: delErr } = await supabase.from('cbt_results').delete().neq('id', 0);
+        if (delErr) throw delErr;
+        if (results.length === 0) return;
+        const rows = results.map(r => ({
+            student_id: r.studentId || '',
+            mapel:      r.mapel    || '',
+            rombel:     r.rombel   || '',
+            date:       r.date     || '',
+            score:      r.score    ?? null,
+            data:       r
+        }));
+        const { error: insErr } = await supabase.from('cbt_results').insert(rows);
+        if (insErr) throw insErr;
+        return;
+    }
     fs.writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2), 'utf8');
 }
 
-function resultUniqueKey(result) {
-    if (!result || typeof result !== 'object') return null;
-    const sid = result.studentId || '';
-    const mapel = result.mapel || '';
-    const rombel = result.rombel || '';
-    const date = result.date || '';
-    return `${sid}::${mapel}::${rombel}::${date}`;
-}
+// ─── Static Files ─────────────────────────────────────────────────────────────
+app.get('/',         (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
+app.get('/logo.png', (req, res) => res.sendFile(path.join(rootPath, 'logo.png')));
 
-function mergeResultsArrays(existing, incoming) {
-    const mergedMap = new Map();
-    (Array.isArray(existing) ? existing : []).forEach(item => {
-        const key = resultUniqueKey(item) || JSON.stringify(item);
-        mergedMap.set(key, item);
-    });
-    (Array.isArray(incoming) ? incoming : []).forEach(item => {
-        const key = resultUniqueKey(item) || JSON.stringify(item);
-        if (!key) return;
-        const old = mergedMap.get(key);
-        if (!old) {
-            mergedMap.set(key, item);
-        } else {
-            mergedMap.set(key, Object.assign({}, old, item));
-        }
-    });
-    return Array.from(mergedMap.values());
-}
-
-// API Endpoints
-app.get('/api/db', (req, res) => {
-    const data = readDB();
-    if (data) return res.json(data);
-    return res.status(404).json({ error: 'Database file not found' });
+// ─── Request Logger ───────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
 });
 
-app.post('/api/db', (req, res) => {
-    const payload = req.body;
+// ─── API Endpoints ────────────────────────────────────────────────────────────
+app.get('/api/db', async (req, res) => {
     try {
+        const data = await readDB();
+        if (data) return res.json(data);
+        return res.status(404).json({ error: 'Database not found' });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/db', async (req, res) => {
+    try {
+        const payload = req.body;
+        // Merge results separately so they are never lost
         const resultsFromPayload = Array.isArray(payload.results) ? payload.results : [];
         if (resultsFromPayload.length > 0) {
-            const currentResults = readResults();
-            const mergedResults = mergeResultsArrays(currentResults, resultsFromPayload);
-            writeResults(mergedResults);
+            const currentResults = await readResults();
+            await writeResults(mergeResultsArrays(currentResults, resultsFromPayload));
         }
         const { results, ...dbWithoutResults } = payload;
-        writeDB(dbWithoutResults);
+        await writeDB(dbWithoutResults);
         return res.json({ ok: true });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 });
 
-app.get('/api/results', (req, res) => {
-    const results = readResults();
-    return res.json(results);
-});
-
-app.post('/api/results', (req, res) => {
-    const results = req.body;
+app.get('/api/results', async (req, res) => {
     try {
-        if (!Array.isArray(results)) {
-            return res.status(400).json({ error: 'Payload must be array of results' });
-        }
-        const currentResults = readResults();
-        const merged = mergeResultsArrays(currentResults, results);
-        writeResults(merged);
-        return res.json({ ok: true, count: merged.length });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
+        const results = await readResults();
+        return res.json(results);
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 });
 
-app.post('/api/result', (req, res) => {
-    const result = req.body;
-    if (!result || typeof result !== 'object') {
-        return res.status(400).json({ error: 'Result payload must be object' });
-    }
+app.post('/api/results', async (req, res) => {
     try {
-        const currentResults = readResults();
-        const merged = mergeResultsArrays(currentResults, [result]);
-        writeResults(merged);
+        const incoming = req.body;
+        if (!Array.isArray(incoming)) return res.status(400).json({ error: 'Payload must be array' });
+        const current = await readResults();
+        const merged  = mergeResultsArrays(current, incoming);
+        await writeResults(merged);
         return res.json({ ok: true, count: merged.length });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 });
 
-// Configure multer for file uploads (.docx)
+app.post('/api/result', async (req, res) => {
+    try {
+        const result = req.body;
+        if (!result || typeof result !== 'object') return res.status(400).json({ error: 'Invalid payload' });
+        const current = await readResults();
+        const merged  = mergeResultsArrays(current, [result]);
+        await writeResults(merged);
+        return res.json({ ok: true, count: merged.length });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+// ─── Word Import ──────────────────────────────────────────────────────────────
 const upload = multer({
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -161,165 +221,89 @@ const upload = multer({
             cb(new Error('Only .docx files are allowed'));
         }
     },
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 app.post('/api/import-word', upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file provided' });
-        }
-        const metadata = {
-            subject: req.body.subject || '',
-            class: req.body.class || '',
-            type: req.body.type || 'single'
-        };
+        if (!req.file) return res.status(400).json({ error: 'No file provided' });
+        const metadata = { subject: req.body.subject || '', class: req.body.class || '', type: req.body.type || 'single' };
         const result = await parseWordDocument(req.file.buffer, metadata);
-        if (!result.success) {
-            return res.status(400).json({ error: result.error });
-        }
-        const db = readDB() || { questions: [], subjects: [], rombels: [], students: [], results: [] };
+        if (!result.success) return res.status(400).json({ error: result.error });
+        const db = (await readDB()) || { ...DEFAULT_DB };
         if (!db.questions) db.questions = [];
         db.questions.push(...result.questions);
-        writeDB(db);
-        return res.json({
-            ok: true,
-            imported: result.count,
-            questions: result.questions,
-            warnings: result.warnings || []
-        });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
+        await writeDB(db);
+        return res.json({ ok: true, imported: result.count, questions: result.questions, warnings: result.warnings || [] });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 });
 
-// Windows virtual hotspot functionality
-function runNetsh(args) {
-    return new Promise((resolve, reject) => {
-        if (process.platform !== 'win32') {
-            return reject(new Error('netsh is only available on Windows'));
+// ─── AI Question Generation ───────────────────────────────────────────────────
+app.post('/api/generate-ai', async (req, res) => {
+    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+    if (!GOOGLE_API_KEY) return res.status(500).json({ error: 'GOOGLE_API_KEY not configured' });
+
+    const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '' } = req.body;
+    if (!materi) return res.status(400).json({ error: 'Materi is required' });
+
+    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+    const prompt = `Buatkan ${jumlah} soal pilihan ganda (tipe: ${tipe}) untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.
+Format JSON array tanpa teks lain:
+[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
+
+    let lastError;
+    for (const model of models) {
+        try {
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_API_KEY}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
+            );
+            if (!response.ok) { lastError = `Model ${model}: ${response.status}`; continue; }
+            const json = await response.json();
+            const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const match = text.match(/\[[\s\S]*\]/);
+            if (!match) { lastError = 'No JSON array in response'; continue; }
+            const questions = JSON.parse(match[0]);
+            return res.json({ ok: true, questions });
+        } catch (e) {
+            lastError = e.message;
         }
-        exec(`netsh wlan ${args}`, { windowsHide: true }, (err, stdout, stderr) => {
-            if (err) {
-                const msg = stderr || err.message || err.toString();
-                const isPermission = /access is denied|requires elevation|akses ditolak|memerlukan elevasi/i.test(msg);
-                const e = new Error(msg);
-                e.code = isPermission ? 'ELEVATION' : undefined;
-                return reject(e);
-            }
-            resolve(stdout);
-        });
-    });
-}
-
-function hotspotError(res, err) {
-    console.error('hotspot error:', err);
-    if (err && (err.code === 'ELEVATION' || /access is denied|akses ditolak/i.test(err.message || ''))) {
-        return res.status(403).json({ error: 'Please run as Administrator to enable hotspot.' });
     }
-    res.status(500).json({ error: err.toString() });
-}
-
-app.post('/api/hotspot/start', async (req, res) => {
-    const { ssid = 'ExamBrowser', key = '12345678' } = req.body || {};
-    if (process.platform !== 'win32') {
-        return res.status(400).json({ error: 'Feature only supported on Windows' });
-    }
-    try {
-        await runNetsh(`set hostednetwork mode=allow ssid="${ssid}" key="${key}"`);
-        await runNetsh('start hostednetwork');
-        res.json({ ok: true });
-    } catch (err) {
-        hotspotError(res, err);
-    }
+    return res.status(500).json({ error: lastError || 'AI generation failed' });
 });
 
-app.post('/api/hotspot/stop', async (req, res) => {
-    if (process.platform !== 'win32') {
-        return res.status(400).json({ error: 'Feature only supported on Windows' });
-    }
-    try {
-        await runNetsh('stop hostednetwork');
-        res.json({ ok: true });
-    } catch (err) {
-        hotspotError(res, err);
-    }
-});
-
-app.get('/api/hotspot/status', async (req, res) => {
-    if (process.platform !== 'win32') {
-        return res.json({ status: 'unsupported' });
-    }
-    try {
-        const output = await runNetsh('show hostednetwork');
-        const active = /Status\s*:\s*Started/i.test(output);
-        res.json({ status: active ? 'started' : 'stopped', info: output });
-    } catch (err) {
-        hotspotError(res, err);
-    }
-});
-
+// ─── IPs ──────────────────────────────────────────────────────────────────────
 app.get('/api/ips', (req, res) => {
-    res.json(getLocalIPv4Addresses());
-});
-
-app.use('/api', (req, res) => {
-    res.status(404).json({ error: 'API endpoint not found' });
-});
-
-app.use('/api', (err, req, res, next) => {
-    console.error('API error:', err);
-    const status = err.status || 500;
-    res.status(status).json({ error: err.message || 'Internal server error' });
-});
-
-// Environment configuration
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
-
-// Initialize data files if missing
-if (!fs.existsSync(DATA_FILE)) {
-    const defaultDb = {
-        subjects: ["Pendidikan Agama", "Bahasa Indonesia", "Matematika", "IPA", "IPS", "Bahasa Inggris", "Seni Budaya", "Informatika", "PJOK", "Bahasa Jawa", "Mandarin"],
-        rombels: ["VII", "VIII", "IX"],
-        questions: [],
-        students: [{ id: "ADM", password: "admin321", name: "Administrator", role: "admin" }]
-    };
-    writeDB(defaultDb);
-}
-if (!fs.existsSync(RESULTS_FILE)) {
-    writeResults([]);
-}
-
-function getLocalIPv4Addresses() {
     const { networkInterfaces } = require('os');
     const nets = networkInterfaces();
-    const results = [];
-    for (const name of Object.keys(nets)) {
-        for (const net of nets[name]) {
-            if (net.family === 'IPv4' && !net.internal) {
-                results.push(net.address);
-            }
+    const ips = [];
+    for (const ifaces of Object.values(nets)) {
+        for (const iface of ifaces) {
+            if (iface.family === 'IPv4' && !iface.internal) ips.push(iface.address);
         }
     }
-    return results;
+    res.json(ips);
+});
+
+// ─── 404 & Error Handlers ─────────────────────────────────────────────────────
+app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found' }));
+app.use('/api', (err, req, res, next) => res.status(err.status || 500).json({ error: err.message }));
+
+// ─── Init Local Files if Running Locally ─────────────────────────────────────
+if (!supabase) {
+    if (!fs.existsSync(DATA_FILE))    fs.writeFileSync(DATA_FILE, JSON.stringify(DEFAULT_DB, null, 2));
+    if (!fs.existsSync(RESULTS_FILE)) fs.writeFileSync(RESULTS_FILE, '[]');
 }
 
-function startServer(port, host) {
-    app.listen(port, host, async () => {
-        console.log(`Server starting at:`);
-        console.log(`  - Local:   http://localhost:${port}`);
-        const ips = getLocalIPv4Addresses();
-        ips.forEach(ip => console.log(`  - Network: http://${ip}:${port}`));
-        console.log(`\nReady to accept connections.`);
-    }).on('error', (err) => {
-        if (err && err.code === 'EADDRINUSE') {
-            console.error(`Port ${port} is already in use.`);
-        } else {
-            console.error('Failed to start server:', err);
-        }
-        process.exit(1);
-    });
-}
+// ─── Start ────────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n🚀 Server running at http://localhost:${PORT}`);
+    if (supabase) console.log('   Mode: Supabase (Cloud)');
+    else          console.log('   Mode: Local JSON files');
+});
 
-startServer(parseInt(PORT, 10), HOST);
+module.exports = app; // required for Vercel
