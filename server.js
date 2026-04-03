@@ -158,6 +158,30 @@ app.use((req, res, next) => {
     next();
 });
 
+// ─── Health / Diagnostic ──────────────────────────────────────────────────────
+app.get('/api/health', async (req, res) => {
+    const status = { ok: false, supabase: !!supabase, tables: {}, error: null };
+    if (!supabase) {
+        status.error = 'Supabase not configured. Set SUPABASE_URL and SUPABASE_KEY env vars.';
+        return res.json(status);
+    }
+    try {
+        // Test cbt_database table
+        const { data: d1, error: e1 } = await supabase.from('cbt_database').select('id').limit(1);
+        status.tables.cbt_database = e1 ? `ERROR: ${e1.message}` : 'OK';
+
+        // Test cbt_results table
+        const { data: d2, error: e2 } = await supabase.from('cbt_results').select('id').limit(1);
+        status.tables.cbt_results = e2 ? `ERROR: ${e2.message}` : 'OK';
+
+        status.ok = !e1 && !e2;
+        if (!status.ok) status.error = 'One or more tables missing. Run supabase_schema.sql in Supabase SQL Editor.';
+    } catch (e) {
+        status.error = e.message;
+    }
+    res.json(status);
+});
+
 // ─── API Endpoints ────────────────────────────────────────────────────────────
 app.get('/api/db', async (req, res) => {
     try {
