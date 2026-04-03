@@ -1986,10 +1986,24 @@
 
             while (retries > 0 && !serverSaveSuccess) {
                 try {
+                    // Strip heavy image data from questions before sending to server
+                    // Images are stored locally in IndexedDB; server only needs text/metadata
+                    const dbForServer = {
+                        ...db,
+                        questions: (db.questions || []).map(q => {
+                            if (!q.images || q.images.length === 0) return q;
+                            return { ...q, images: q.images.map(img => ({
+                                name: img.name || '',
+                                type: img.type || '',
+                                // Strip base64 data – images are kept in local IDB
+                                data: '[IMAGE_LOCAL_ONLY]'
+                            })) };
+                        })
+                    };
                     const res = await fetch(getApiBaseUrl() + '/api/db', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(db)
+                        body: JSON.stringify(dbForServer)
                     });
 
                     if (res.ok) {

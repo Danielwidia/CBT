@@ -86,11 +86,13 @@ async function readDB() {
 
 async function writeDB(obj) {
     if (supabase) {
-        // Upsert: always update the single row (id=1)
         const { error } = await supabase
             .from('cbt_database')
             .upsert({ id: 1, data: obj, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase writeDB error:', JSON.stringify(error));
+            throw new Error(error.message || 'Supabase write failed');
+        }
         return;
     }
     fs.writeFileSync(DATA_FILE, JSON.stringify(obj, null, 2), 'utf8');
@@ -118,9 +120,15 @@ async function readResults() {
 
 async function writeResults(results) {
     if (supabase) {
-        // Strategy: clear all rows then re-insert (simple and reliable for this scale)
-        const { error: delErr } = await supabase.from('cbt_results').delete().neq('id', 0);
-        if (delErr) throw delErr;
+        // Delete all then re-insert
+        const { error: delErr } = await supabase
+            .from('cbt_results')
+            .delete()
+            .gte('id', 0); // delete all rows
+        if (delErr) {
+            console.error('Supabase delete error:', JSON.stringify(delErr));
+            throw new Error(delErr.message || 'Supabase delete failed');
+        }
         if (results.length === 0) return;
         const rows = results.map(r => ({
             student_id: r.studentId || '',
@@ -131,7 +139,10 @@ async function writeResults(results) {
             data:       r
         }));
         const { error: insErr } = await supabase.from('cbt_results').insert(rows);
-        if (insErr) throw insErr;
+        if (insErr) {
+            console.error('Supabase insert error:', JSON.stringify(insErr));
+            throw new Error(insErr.message || 'Supabase insert failed');
+        }
         return;
     }
     fs.writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2), 'utf8');

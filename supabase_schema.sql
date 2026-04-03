@@ -1,12 +1,14 @@
 -- Jalankan SQL ini di Supabase Dashboard > SQL Editor
--- Buat tabel untuk menyimpan database utama (soal, siswa, dll)
+-- https://supabase.com/dashboard/project/vzrrwbaupqegzbnsqvfe/sql/new
+
+-- 1. Buat tabel untuk database utama
 CREATE TABLE IF NOT EXISTS cbt_database (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT PRIMARY KEY DEFAULT 1,
   data JSONB NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Buat tabel untuk menyimpan hasil ujian siswa
+-- 2. Buat tabel untuk hasil ujian siswa
 CREATE TABLE IF NOT EXISTS cbt_results (
   id BIGSERIAL PRIMARY KEY,
   student_id TEXT NOT NULL,
@@ -18,9 +20,13 @@ CREATE TABLE IF NOT EXISTS cbt_results (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Sisipkan baris awal untuk database jika belum ada
-INSERT INTO cbt_database (data)
-SELECT '{
+-- 3. PENTING: Disable RLS agar anon key bisa baca/tulis
+ALTER TABLE cbt_database DISABLE ROW LEVEL SECURITY;
+ALTER TABLE cbt_results  DISABLE ROW LEVEL SECURITY;
+
+-- 4. Sisipkan data awal (hanya jika tabel masih kosong)
+INSERT INTO cbt_database (id, data)
+VALUES (1, '{
   "subjects": [
     {"name":"Pendidikan Agama","locked":false},
     {"name":"Bahasa Indonesia","locked":false},
@@ -35,5 +41,5 @@ SELECT '{
   "results": [],
   "schedules": [],
   "timeLimits": {}
-}'::jsonb
-WHERE NOT EXISTS (SELECT 1 FROM cbt_database LIMIT 1);
+}'::jsonb)
+ON CONFLICT (id) DO NOTHING;
