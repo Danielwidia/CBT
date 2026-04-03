@@ -30492,5 +30492,1079 @@
     ],
     "deleted": true,
     "updatedAt": 1775199160934
+  },
+  {
+    "studentId": "DRKS-1729",
+    "studentName": "Wahyu",
+    "rombel": "VIII",
+    "mapel": "Informatika",
+    "score": "0.0",
+    "date": "2026-04-03T06:55:43.632Z",
+    "answers": [
+      2,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "questions": [
+      {
+        "text": "Berikut ini adalah fitur game dalam blockly.games, kecuali ...",
+        "options": [
+          "Puzzle",
+          "Maze",
+          "Bird",
+          "Cat"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 3,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Pada blockly.games hasil code akan otomatis diubah ke dalam bentuk ...",
+        "options": [
+          "PHP",
+          "Javascript",
+          "HTML",
+          "Semua benar"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Kita tahu bahwa komputer mempunyai tiga elemen penting, yaitu ...",
+        "options": [
+          "Input, CPU, Output",
+          "Input, ALU, Output",
+          "ALU, CPU, Output",
+          "Semua benar"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras komputer yang berfungsi untuk memproses seluruh data dan menjalankan instruksi program disebut ....",
+        "options": [
+          "Harddisk",
+          "RAM",
+          "Prosesor",
+          "Monitor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk menampilkan hasil proses komputer dalam bentuk visual adalah ....",
+        "options": [
+          "Printer",
+          "Monitor",
+          "Scanner",
+          "Speaker"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat yang berfungsi sebagai tempat penyimpanan data sementara saat komputer sedang bekerja adalah ....",
+        "options": [
+          "ROM",
+          "RAM",
+          "Harddisk",
+          "Flashdisk"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras berikut yang termasuk perangkat input adalah ....",
+        "options": [
+          "Keyboard",
+          "Printer",
+          "Monitor",
+          "Speaker"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk mencetak dokumen dari komputer ke kertas disebut ....",
+        "options": [
+          "Printer",
+          "Scanner",
+          "Plotter",
+          "Proyektor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat yang digunakan untuk memindai dokumen atau gambar menjadi data digital disebut ....",
+        "options": [
+          "Printer",
+          "Scanner",
+          "Monitor",
+          "Keyboard"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk memasukkan data berupa huruf, angka, dan simbol adalah ....",
+        "options": [
+          "Mouse",
+          "Keyboard",
+          "Scanner",
+          "Joystick"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang berfungsi untuk menggerakkan pointer pada layar komputer adalah ....",
+        "options": [
+          "Mouse",
+          "Printer",
+          "Speaker",
+          "Monitor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk menyimpan data secara permanen di dalam komputer adalah ....",
+        "options": [
+          "RAM",
+          "Harddisk",
+          "Cache",
+          "Register"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang menghasilkan keluaran berupa suara adalah ....",
+        "options": [
+          "Speaker",
+          "Monitor",
+          "Printer",
+          "Keyboard"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Motherboard berfungsi sebagai ....",
+        "options": [
+          "Tempat menyimpan data",
+          "Pusat penghubung semua komponen komputer",
+          "Alat mencetak dokumen",
+          "Alat memasukkan data"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang berfungsi mengolah grafis dan tampilan pada monitor adalah ....",
+        "options": [
+          "Sound Card",
+          "LAN Card",
+          "VGA Card",
+          "Modem"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk menghubungkan komputer ke jaringan internet disebut ....",
+        "options": [
+          "Sound Card",
+          "LAN Card",
+          "VGA Card",
+          "RAM"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras berikut yang termasuk perangkat output adalah ....",
+        "options": [
+          "Keyboard",
+          "Mouse",
+          "Monitor",
+          "Scanner"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Contoh media penyimpanan eksternal adalah ....",
+        "options": [
+          "RAM",
+          "Harddisk internal",
+          "Flashdisk",
+          "Processor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk membaca dan menulis data pada CD atau DVD adalah ....",
+        "options": [
+          "CD/DVD Drive",
+          "Harddisk",
+          "RAM",
+          "VGA"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk bermain game dengan kontrol khusus disebut ....",
+        "options": [
+          "Mouse",
+          "Keyboard",
+          "Joystick",
+          "Scanner"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang berfungsi mengolah suara pada komputer adalah ....",
+        "options": [
+          "Sound Card",
+          "VGA Card",
+          "LAN Card",
+          "Processor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk menampilkan presentasi ke layar besar adalah ....",
+        "options": [
+          "Printer",
+          "Scanner",
+          "Proyektor",
+          "Speaker"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras berikut yang termasuk perangkat penyimpanan adalah ....",
+        "options": [
+          "Harddisk",
+          "Keyboard",
+          "Monitor",
+          "Mouse"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "RAM memiliki sifat penyimpanan data yang ....",
+        "options": [
+          "Permanen",
+          "Tetap meskipun listrik mati",
+          "Sementara",
+          "Tidak dapat dihapus"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa alamat situs resmi untuk mengakses Blockly Games?",
+        "options": [
+          "blockly.com",
+          "https://www.google.com/search?q=blockly-games.appspot.com",
+          "https://www.google.com/search?q=google-blockly.com",
+          "games-blockly.org"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Manakah di antara berikut yang merupakan permainan pertama untuk mengenal konsep dasar Blockly?",
+        "options": [
+          "Puzzle",
+          "Sudoku",
+          "Tetris",
+          "Chess"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Bahasa pemrograman apa yang ditampilkan sebagai hasil setelah pemain berhasil menyusun blok?",
+        "options": [
+          "Python",
+          "C++",
+          "JavaScript",
+          "HTML"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Pada permainan Maze Level 1, berapa blok 'Move Forward' (maju) yang dibutuhkan untuk mencapai titik tujuan?",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "correct": 1,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Blok 'Turn Left' dalam Blockly Games berfungsi untuk...",
+        "options": [
+          "Gerak maju ke depan",
+          "Berbelok ke arah kanan",
+          "Berbelok ke arah kiri",
+          "Berhenti di tempat"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Jenis blok perulangan yang mulai diperkenalkan pada Maze Level 4 adalah...",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "Repeat 5 times",
+          "Repeat Until (ulangi sampai)",
+          "If (jika)",
+          "Forever"
+        ],
+        "correct": 1,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Dalam kode JavaScript, perintah while (notDone()) pada permainan Maze memiliki arti...",
+        "options": [
+          "Berhenti menjalankan kode sekarang juga",
+          "Ulangi aksi selama tujuan belum tercapai",
+          "Jika ada jalan terbuka di depan",
+          "Putar badan ke arah kiri"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa tujuan utama yang harus dicapai dalam permainan Bird?",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "Mencari jalan keluar dari labirin yang gelap",
+          "Mengambil cacing dan membawanya kembali ke sarang",
+          "Melukis berbagai bentuk geometri berwarna-warni",
+          "Menembak target yang bergerak"
+        ],
+        "correct": 1,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Dalam permainan Puzzle, apa yang harus dilakukan pemain untuk menyelesaikan tantangan?",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "Memasangkan gambar hewan dengan ciri-ciri (traits) dan jumlah kakinya",
+          "Mencocokkan suara dengan kata-kata yang muncul",
+          "Menyusun angka berdasarkan urutan warna pelangi",
+          "Menentukan arah jalan yang benar bagi karakter"
+        ],
+        "correct": 0,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa manfaat paling utama dari belajar pemrograman menggunakan blok visual di Blockly Games?",
+        "options": [
+          "Membuat kinerja prosesor komputer menjadi lebih cepat",
+          "Memahami logika algoritma tanpa risiko kesalahan pengetikan sintaks (typo)",
+          "Bisa bermain game aksi secara gratis",
+          "Mempercepat proses pengunduhan aplikasi di internet"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Setelah berhasil menyelesaikan Level 10 di setiap jenis permainan, apa yang biasanya disarankan?",
+        "options": [
+          "Membayar biaya lisensi untuk lanjut",
+          "Melanjutkan ke tantangan atau jenis permainan lain yang lebih sulit",
+          "Menghapus akun dan data permainan",
+          "Mengulang kembali permainan dari Level 1"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Manakah di antara berikut yang merupakan otak utama dari sebuah komputer yang berfungsi memproses instruksi?",
+        "options": [
+          "Hard Drive",
+          "Power Supply",
+          "Central Processing Unit (CPU)",
+          "Monitor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang berfungsi untuk menyimpan data secara permanen, meskipun komputer dimatikan, adalah...",
+        "options": [
+          "RAM",
+          "Hard Disk Drive (HDD)",
+          "Register",
+          "Cache Memory"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa kepanjangan dari RAM?",
+        "options": [
+          "Read Access Memory",
+          "Random Access Memory",
+          "Real Analysis Memory",
+          "Running Auxiliary Memory"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat input yang digunakan untuk menggerakkan kursor pada layar monitor adalah...",
+        "options": [
+          "Keyboard",
+          "Mouse",
+          "Speaker",
+          "Printer"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Papan sirkuit utama tempat semua komponen komputer (CPU, RAM, Kartu Grafis) terhubung disebut...",
+        "options": [
+          "Sound Card",
+          "Motherboard",
+          "Chassis",
+          "Processor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat yang berfungsi untuk menampilkan output berupa gambar atau video kepada pengguna adalah...",
+        "options": [
+          "Scanner",
+          "Projector/Monitor",
+          "Plotter",
+          "Webcam"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Manakah di bawah ini yang termasuk perangkat keluaran (output device)?",
+        "options": [
+          "Microphone",
+          "Scanner",
+          "Printer",
+          "Joystick"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang berfungsi mendinginkan suhu processor saat bekerja adalah...",
+        "options": [
+          "Heat Sink / Heatsink Fan",
+          "Power Supply",
+          "Casing",
+          "LAN Card"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Komponen yang bertugas menyuplai arus listrik ke seluruh komponen di dalam casing komputer adalah...",
+        "options": [
+          "UPS",
+          "Stabilizer",
+          "Power Supply Unit (PSU)",
+          "Battery"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat input yang digunakan untuk memasukkan data berupa karakter, angka, dan simbol adalah...",
+        "options": [
+          "Barcode Scanner",
+          "Keyboard",
+          "Touchpad",
+          "Light Pen"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat yang digunakan untuk mengubah dokumen fisik menjadi data digital di komputer adalah...",
+        "options": [
+          "Printer",
+          "Scanner",
+          "Plotter",
+          "Speaker"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang digunakan untuk memasukkan suara ke dalam komputer disebut...",
+        "options": [
+          "Speaker",
+          "Headset",
+          "Microphone",
+          "Sound Card"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Flashdisk merupakan alat penyimpanan data yang menggunakan koneksi port...",
+        "options": [
+          "LAN",
+          "HDMI",
+          "USB",
+          "VGA"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Perangkat keras yang berfungsi menghubungkan komputer ke jaringan internet melalui kabel adalah...",
+        "options": [
+          "Sound Card",
+          "Ethernet/LAN Card",
+          "TV Tuner",
+          "Capture Card"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Alat yang digunakan untuk mencetak gambar dalam ukuran yang sangat besar, seperti baliho atau spanduk, disebut...",
+        "options": [
+          "Printer Inkjet",
+          "Plotter",
+          "Laserjet",
+          "Fotokopi"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Blok Scratch \"Broadcast\" digunakan untuk...",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "Mengirim sinyal agar sprite lain melakukan aksi tertentu",
+          "Menghapus semua variabel",
+          "Menghubungkan Scratch dengan internet",
+          "Menghentikan seluruh program"
+        ],
+        "correct": 0,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa fungsi utama dari fitur \"Sprite\" dalam aplikasi Scratch?",
+        "options": [
+          "Mengatur latar belakang panggung",
+          "Karakter atau objek yang dapat diprogram untuk bergerak",
+          "Mengubah warna tampilan jendela editor",
+          "Menyimpan proyek ke dalam komputer"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Blok perintah yang digunakan untuk memulai sebuah program saat ikon bendera hijau diklik berada pada kategori...",
+        "options": [
+          "Motion",
+          "Events",
+          "Control",
+          "Sensing"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Manakah blok yang digunakan untuk membuat Sprite bergerak maju sebanyak beberapa langkah?",
+        "options": [
+          "turn 15 degrees",
+          "go to x:0 y:0",
+          "move 10 steps",
+          "glide 1 secs to random position"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Blok \"Forever\" dalam kategori Control berfungsi untuk...",
+        "options": [
+          "Mengulangi perintah hanya sebanyak 10 kali",
+          "Menghentikan semua program yang sedang berjalan",
+          "Mengulangi perintah di dalamnya secara terus-menerus",
+          "Menjalankan perintah hanya jika kondisi tertentu terpenuhi"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa fungsi dari blok \"Say Hello! for 2 seconds\"?",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "Membuat suara rekaman \"Hello\"",
+          "Memunculkan teks balon ucapan di atas Sprite selama 2 detik",
+          "Mengirim pesan rahasia ke Sprite lain",
+          "Mengubah nama Sprite menjadi \"Hello\""
+        ],
+        "correct": 1,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Kategori blok yang berwarna biru muda (Sensing) biasanya digunakan untuk...",
+        "options": [
+          "Mewarnai Sprite",
+          "Mendeteksi sentuhan, jarak, atau input dari pengguna",
+          "Menghitung operasi matematika",
+          "Membuat variabel baru"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 1,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Jika kita ingin Sprite memantul kembali saat menyentuh pinggir panggung, blok yang digunakan adalah...",
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "images": [
+          {
+            "name": "",
+            "type": "",
+            "data": "[IMAGE_LOCAL_ONLY]"
+          }
+        ],
+        "options": [
+          "if on edge, bounce",
+          "set rotation style",
+          "point in direction",
+          "change x by 10"
+        ],
+        "correct": 0,
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Apa kegunaan dari \"Backdrops\" pada Scratch?",
+        "options": [
+          "Mengubah bentuk tubuh Sprite",
+          "Memberikan suara latar pada animasi",
+          "Mengatur gambar latar belakang pada Stage",
+          "Membuat variabel skor"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 2,
+        "images": [],
+        "questions": [],
+        "answers": []
+      },
+      {
+        "text": "Blok perintah \"Next Costume\" sangat berguna saat kita ingin membuat animasi...",
+        "options": [
+          "Berjalan atau bergerak",
+          "Berubah warna menjadi pelangi",
+          "Menghilang dari layar",
+          "Berputar 360 derajat"
+        ],
+        "mapel": "Informatika",
+        "rombel": "VIII",
+        "type": "single",
+        "correct": 0,
+        "images": [],
+        "questions": [],
+        "answers": []
+      }
+    ]
   }
 ]
