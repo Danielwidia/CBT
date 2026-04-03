@@ -910,8 +910,18 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modals -->
+    <!-- Saving Data Modal for Sequential Render/Deploy Queue -->
+    <div id="saving-modal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-[110] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center">
+            <div class="w-16 h-16 border-4 border-sky-100 border-t-sky-600 rounded-full animate-spin mx-auto mb-6"></div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">Menyimpan Nilai...</h3>
+            <p class="text-sm text-slate-500 mb-4">Mohon tunggu, sistem sedang memproses antrian Anda untuk memastikan tidak ada nilai yang hilang atau tidak tersimpan.</p>
+        </div>
+    </div>
+
+    <!-- Modals -->
         <div id="config-modal"
             class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
             <div class="bg-white rounded-3xl max-w-xs w-full p-8 shadow-2xl animate-fade-in">
@@ -5592,6 +5602,17 @@
             };
             db.results.push(newEntry);
             updateCompletionCharts();
+            
+            // Tampilkan UI Loading Antrian
+            document.getElementById('confirm-finish-modal').classList.add('hidden');
+            document.getElementById('exam-screen').classList.add('hidden');
+            
+            const savingModal = document.getElementById('saving-modal');
+            if (savingModal) {
+                savingModal.classList.remove('hidden');
+                savingModal.classList.add('flex');
+            }
+
             // always persist locally so a page reload (or offline session) doesn't
             // wipe out newly-submitted results.  We still try to push the single
             // entry to the server first, but even if that succeeds we save the
@@ -5614,6 +5635,11 @@
                 console.warn('auto-save after finishing exam failed:', e.message || e);
             }
 
+            if (savingModal) {
+                savingModal.classList.add('hidden');
+                savingModal.classList.remove('flex');
+            }
+
             // refresh admin/teacher views if they're visible so the new score
             // shows up right away
             if (document.getElementById('admin-dashboard') &&
@@ -5628,7 +5654,6 @@
                 renderTeacherResults();
             }
 
-            document.getElementById('exam-screen').classList.add('hidden');
             document.getElementById('score-result').classList.remove('hidden');
             document.getElementById('final-score-val').innerText = score;
         }

@@ -116,7 +116,43 @@ function mergeResults(existing = [], incoming = []) {
     return Array.from(map.values());
 }
 
-// ─── Data Layer ───────────────────────────────────────────────────────────────
+// ─── Data Layer (With Queue Mechanism) ──────────────────────────────────────────
+const saveQueue = [];
+let isProcessingQueue = false;
+
+function pushToSaveQueue(taskFn) {
+    return new Promise((resolve, reject) => {
+        saveQueue.push({ taskFn, resolve, reject });
+        if (!isProcessingQueue) {
+            processSaveQueue();
+        }
+    });
+}
+
+async function processSaveQueue() {
+    if (isProcessingQueue) return;
+    isProcessingQueue = true;
+
+    while (saveQueue.length > 0) {
+        const { taskFn, resolve, reject } = saveQueue[0];
+        try {
+            const result = await taskFn();
+            resolve(result);
+        } catch (e) {
+            reject(e);
+        }
+        
+        saveQueue.shift();
+        
+        // Wait 5 seconds matching the user's request: "untuk menunggu 1 dengan yang lainnya"
+        if (saveQueue.length > 0) {
+            await new Promise(r => setTimeout(r, 5000));
+        }
+    }
+    
+    isProcessingQueue = false;
+}
+
 async function readDB() {
     if (USE_GITHUB) {
         const file = await ghReadFile(DB_PATH);
@@ -129,13 +165,15 @@ async function readDB() {
 }
 
 async function writeDB(obj) {
-    if (USE_GITHUB) {
-        // Read current SHA first (required by GitHub API for updates)
-        const existing = await ghReadFile(DB_PATH).catch(() => null);
-        await ghWriteFile(DB_PATH, obj, existing?.sha);
-        return;
-    }
-    fs.writeFileSync(LOCAL_DATA, JSON.stringify(obj, null, 2), 'utf8');
+    return pushToSaveQueue(async () => {
+        if (USE_GITHUB) {
+            // Read current SHA first (required by GitHub API for updates)
+            const existing = await ghReadFile(DB_PATH).catch(() => null);
+            await ghWriteFile(DB_PATH, obj, existing?.sha);
+            return;
+        }
+        fs.writeFileSync(LOCAL_DATA, JSON.stringify(obj, null, 2), 'utf8');
+    });
 }
 
 async function readResults() {
@@ -150,12 +188,14 @@ async function readResults() {
 }
 
 async function writeResults(results) {
-    if (USE_GITHUB) {
-        const existing = await ghReadFile(RESULTS_PATH).catch(() => null);
-        await ghWriteFile(RESULTS_PATH, results, existing?.sha);
-        return;
-    }
-    fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(results, null, 2), 'utf8');
+    return pushToSaveQueue(async () => {
+        if (USE_GITHUB) {
+            const existing = await ghReadFile(RESULTS_PATH).catch(() => null);
+            await ghWriteFile(RESULTS_PATH, results, existing?.sha);
+            return;
+        }
+        fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(results, null, 2), 'utf8');
+    });
 }
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
