@@ -1845,6 +1845,21 @@
                             db = normalizeDb({ ...serverDb, results: db.results });
                         }
                         console.log('Database loaded/merged from server');
+
+                        // Also fetch results separately (stored in /api/results, not /api/db)
+                        try {
+                            const rRes = await fetch(getApiBaseUrl() + '/api/results');
+                            if (rRes.ok) {
+                                const serverResults = await rRes.json();
+                                if (Array.isArray(serverResults) && serverResults.length > 0) {
+                                    db.results = mergeResults(db.results, serverResults);
+                                    console.log(`[INIT] Loaded ${serverResults.length} results from server.`);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Could not load /api/results on init:', e.message);
+                        }
+
                         updateStats();
                         return;
                     }
@@ -3173,7 +3188,8 @@
             if (sec === 'results') {
                 populateSelects(['results-filter-rombel', 'results-filter-mapel'], true);
                 renderAdminResults();
-                // begin polling server for new results
+                // Immediately fetch fresh results from server, then poll every 5s
+                fetchAndMerge();
                 if (resultsPollInterval) clearInterval(resultsPollInterval);
                 resultsPollInterval = setInterval(fetchAndMerge, 5000);
             } else {
