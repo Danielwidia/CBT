@@ -272,7 +272,24 @@ app.post('/api/generate-ai', async (req, res) => {
     const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '' } = req.body;
     if (!materi) return res.status(400).json({ error: 'Materi is required' });
     const prompt = `Buatkan ${jumlah} soal pilihan ganda untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nFormat JSON array saja:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
-    const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+    const models = [
+        'gemini-3.1-pro',
+        'gemini-3-flash',
+        'gemini-3.1-flash-lite',
+        'nano-banana-2',
+        'gemini-3.1-flash-image',
+        'nano-banana-pro',
+        'gemini-3-pro-image',
+        'gemini-2.5-pro',
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro',
+        'gemini-1.5-pro-latest',
+        'gemini-pro',
+        'gemini-1.0-pro'
+    ];
     let lastError;
     for (const model of models) {
         try {
