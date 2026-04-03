@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
 const { parseWordDocument } = require('./wordParser');
 
 const app = express();
@@ -13,22 +14,21 @@ app.use(express.json({ limit: '10mb' }));
 const rootPath = __dirname;
 
 // ─── Environment ──────────────────────────────────────────────────────────────
-const GITHUB_TOKEN  = process.env.GITHUB_TOKEN;
-const GITHUB_REPO   = process.env.GITHUB_REPO;   // e.g. "danielwidia/danielwidia.github.io"
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
-const DB_PATH       = '_data/cbt_db.json';
-const RESULTS_PATH  = '_data/cbt_results.json';
+const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_KEY  = process.env.SUPABASE_KEY;
 
 // Local fallback paths
 const LOCAL_DATA    = path.join(process.cwd(), 'database.json');
 const LOCAL_RESULTS = path.join(process.cwd(), 'results.json');
 
-const USE_GITHUB = !!(GITHUB_TOKEN && GITHUB_REPO);
+const USE_SUPABASE = !!(SUPABASE_URL && SUPABASE_KEY);
+let supabase = null;
 
-if (USE_GITHUB) {
-    console.log(`✅ GitHub DB mode: ${GITHUB_REPO} (branch: ${GITHUB_BRANCH})`);
+if (USE_SUPABASE) {
+    console.log(`✅ Supabase mode: Connected to ${SUPABASE_URL}`);
+    supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 } else {
-    console.log('⚠️  GitHub not configured – using local JSON files as fallback.');
+    console.log('⚠️  Supabase not configured – using local JSON files as fallback.');
 }
 
 // ─── Default DB ───────────────────────────────────────────────────────────────
@@ -49,61 +49,6 @@ const DEFAULT_DB = {
     timeLimits: {}
 };
 
-// ─── GitHub API Helpers ───────────────────────────────────────────────────────
-const GH_HEADERS = () => ({
-    'Authorization': `Bearer ${GITHUB_TOKEN}`,
-    'Accept':        'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28',
-    'Content-Type':  'application/json'
-});
-
-async function ghReadFile(filePath) {
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}?ref=${GITHUB_BRANCH}`;
-    const res  = await fetch(url, { headers: GH_HEADERS() });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`GitHub read metadata for ${filePath}: HTTP ${res.status}`);
-    const json = await res.json();
-    
-    // Fallback khusus untuk file > 1MB, GitHub tidak akan memberikan json.content
-    let contentStr = '';
-    if (json.content && json.encoding === 'base64') {
-        contentStr = Buffer.from(json.content, 'base64').toString('utf8');
-    } else if (json.download_url || json.git_url) {
-        // Ambil data langsung dari raw file jika ukurannya besar
-        const rawRes = await fetch(json.download_url || `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${filePath}`, { 
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
-        });
-        if (!rawRes.ok) throw new Error(`GitHub Read Raw ${filePath}: HTTP ${rawRes.status}`);
-        contentStr = await rawRes.text();
-    } else {
-        throw new Error(`File ${filePath} is too large and no download_url found (Size: ${json.size} bytes)`);
-    }
-
-    try {
-        const parsed = JSON.parse(contentStr);
-        return { data: parsed, sha: json.sha };
-    } catch (e) {
-        console.error(`Error parsing JSON for ${filePath}:`, e.message);
-        throw new Error(`Invalid JSON format in ${filePath}`);
-    }
-}
-
-async function ghWriteFile(filePath, data, sha) {
-    const url  = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`;
-    const body = {
-        message:  `[CBT] update ${filePath}`,
-        content:  Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
-        branch:   GITHUB_BRANCH
-    };
-    if (sha) body.sha = sha;
-    const res = await fetch(url, { method: 'PUT', headers: GH_HEADERS(), body: JSON.stringify(body) });
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`GitHub write ${filePath}: ${err}`);
-    }
-    return res.json();
-}
-
 // ─── Merge helpers ────────────────────────────────────────────────────────────
 function mergeResults(existing = [], incoming = []) {
     const map = new Map();
@@ -116,47 +61,18 @@ function mergeResults(existing = [], incoming = []) {
     return Array.from(map.values());
 }
 
-// ─── Data Layer (With Queue Mechanism) ──────────────────────────────────────────
-const saveQueue = [];
-let isProcessingQueue = false;
-
-function pushToSaveQueue(taskFn) {
-    return new Promise((resolve, reject) => {
-        saveQueue.push({ taskFn, resolve, reject });
-        if (!isProcessingQueue) {
-            processSaveQueue();
-        }
-    });
-}
-
-async function processSaveQueue() {
-    if (isProcessingQueue) return;
-    isProcessingQueue = true;
-
-    while (saveQueue.length > 0) {
-        const { taskFn, resolve, reject } = saveQueue[0];
-        try {
-            const result = await taskFn();
-            resolve(result);
-        } catch (e) {
-            reject(e);
-        }
-        
-        saveQueue.shift();
-        
-        // Wait 5 seconds matching the user's request: "untuk menunggu 1 dengan yang lainnya"
-        if (saveQueue.length > 0) {
-            await new Promise(r => setTimeout(r, 5000));
-        }
-    }
-    
-    isProcessingQueue = false;
-}
-
+// ─── Data Layer (Supabase Native + Fallback) ──────────────────────────────────
 async function readDB() {
-    if (USE_GITHUB) {
-        const file = await ghReadFile(DB_PATH);
-        return file ? file.data : null;
+    if (USE_SUPABASE) {
+        const { data, error } = await supabase
+            .from('cbt_database')
+            .select('data')
+            .eq('id', 1)
+            .single();
+        if (error && error.code !== 'PGRST116') {
+             console.error('Supabase readDB error:', error);
+        }
+        return data ? data.data : null;
     }
     try {
         if (!fs.existsSync(LOCAL_DATA)) return null;
@@ -165,21 +81,27 @@ async function readDB() {
 }
 
 async function writeDB(obj) {
-    return pushToSaveQueue(async () => {
-        if (USE_GITHUB) {
-            // Read current SHA first (required by GitHub API for updates)
-            const existing = await ghReadFile(DB_PATH).catch(() => null);
-            await ghWriteFile(DB_PATH, obj, existing?.sha);
-            return;
-        }
-        fs.writeFileSync(LOCAL_DATA, JSON.stringify(obj, null, 2), 'utf8');
-    });
+    if (USE_SUPABASE) {
+        const { error } = await supabase
+            .from('cbt_database')
+            .upsert({ id: 1, data: obj, updated_at: new Date() });
+        if (error) throw new Error('Supabase writeDB error: ' + error.message);
+        return;
+    }
+    fs.writeFileSync(LOCAL_DATA, JSON.stringify(obj, null, 2), 'utf8');
 }
 
 async function readResults() {
-    if (USE_GITHUB) {
-        const file = await ghReadFile(RESULTS_PATH);
-        return file ? file.data : [];
+    if (USE_SUPABASE) {
+        const { data, error } = await supabase
+            .from('cbt_results')
+            .select('data')
+            .order('created_at', { ascending: false });
+        if (error) {
+             console.error('Supabase readResults error:', error);
+             return [];
+        }
+        return data.map(row => row.data);
     }
     try {
         if (!fs.existsSync(LOCAL_RESULTS)) return [];
@@ -188,14 +110,42 @@ async function readResults() {
 }
 
 async function writeResults(results) {
-    return pushToSaveQueue(async () => {
-        if (USE_GITHUB) {
-            const existing = await ghReadFile(RESULTS_PATH).catch(() => null);
-            await ghWriteFile(RESULTS_PATH, results, existing?.sha);
-            return;
-        }
-        fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(results, null, 2), 'utf8');
-    });
+    if (USE_SUPABASE) {
+        // Because cbt_results does not have a unique constraint, we simply recreate the table records or insert 
+        // We will avoid full replacement for bulk and trust the admin dashboard to use `/api/result` primarily.
+        // However, if bulk write is needed, we map and insert.
+        const records = results.map(r => ({
+            student_id: r.studentId || '',
+            mapel: r.mapel || '',
+            rombel: r.rombel || '',
+            date: r.date || new Date().toISOString(),
+            score: typeof r.score === 'string' ? parseFloat(r.score) : r.score,
+            data: r
+        }));
+        // Optional: clear standard table if mimicking GitHub full sync, but we want persistence
+        // For standard bulk synchronization, append safely:
+        const { error } = await supabase.from('cbt_results').insert(records);
+        if (error) console.error('Supabase fetch error:', error.message);
+        return;
+    }
+    fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(results, null, 2), 'utf8');
+}
+
+async function insertResultSingle(resultObj) {
+    if (USE_SUPABASE) {
+        const { error } = await supabase.from('cbt_results').insert({
+            student_id: resultObj.studentId || '',
+            mapel: resultObj.mapel || '',
+            rombel: resultObj.rombel || '',
+            date: resultObj.date || new Date().toISOString(),
+            score: typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score,
+            data: resultObj
+        });
+        if (error) throw new Error('Supabase insertResultSingle error: ' + error.message);
+    } else {
+        const merged = mergeResults(await readResults(), [resultObj]);
+        fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(merged, null, 2), 'utf8');
+    }
 }
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
@@ -208,23 +158,21 @@ app.use((req, res, next) => { console.log(`${req.method} ${req.url}`); next(); }
 app.get('/api/health', async (req, res) => {
     const status = {
         ok: false,
-        mode: USE_GITHUB ? 'github' : 'local',
-        github_repo: GITHUB_REPO || null,
-        github_token: GITHUB_TOKEN ? '***set***' : 'NOT SET',
+        mode: USE_SUPABASE ? 'supabase' : 'local',
         error: null
     };
-    if (USE_GITHUB) {
+    if (USE_SUPABASE) {
         try {
-            const db = await ghReadFile(DB_PATH);
-            const results = await ghReadFile(RESULTS_PATH);
-            status.db_file      = db      ? 'OK' : 'NOT FOUND (will be created on first save)';
-            status.results_file = results ? 'OK' : 'NOT FOUND (will be created on first save)';
+            const { error: dbError } = await supabase.from('cbt_database').select('id').limit(1);
+            if (dbError) throw dbError;
+            
+            status.db_connection = 'OK';
             status.ok = true;
         } catch (e) {
             status.error = e.message;
         }
     } else {
-        status.error = 'Set GITHUB_TOKEN and GITHUB_REPO in Vercel environment variables.';
+        status.error = 'Set SUPABASE_URL and SUPABASE_KEY in environment variables.';
     }
     res.json(status);
 });
@@ -245,8 +193,8 @@ app.post('/api/db', async (req, res) => {
     try {
         const payload = req.body;
         if (Array.isArray(payload.results) && payload.results.length > 0) {
-            const current = await readResults();
-            await writeResults(mergeResults(current, payload.results));
+            // Bulk insert results directly in standard payload format
+            await writeResults(payload.results);
         }
         const { results, ...dbOnly } = payload;
         await writeDB(dbOnly);
@@ -271,9 +219,8 @@ app.post('/api/results', async (req, res) => {
     try {
         const incoming = req.body;
         if (!Array.isArray(incoming)) return res.status(400).json({ error: 'Array required' });
-        const merged = mergeResults(await readResults(), incoming);
-        await writeResults(merged);
-        return res.json({ ok: true, count: merged.length });
+        await writeResults(incoming);
+        return res.json({ ok: true, count: incoming.length });
     } catch (e) {
         console.error('POST /api/results error:', e.message);
         return res.status(500).json({ error: e.message });
@@ -284,9 +231,8 @@ app.post('/api/result', async (req, res) => {
     try {
         const result = req.body;
         if (!result || typeof result !== 'object') return res.status(400).json({ error: 'Invalid payload' });
-        const merged = mergeResults(await readResults(), [result]);
-        await writeResults(merged);
-        return res.json({ ok: true, count: merged.length });
+        await insertResultSingle(result);
+        return res.json({ ok: true, count: 1 });
     } catch (e) {
         console.error('POST /api/result error:', e.message);
         return res.status(500).json({ error: e.message });
@@ -360,7 +306,7 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not fo
 app.use('/api', (err, req, res, next) => res.status(err.status || 500).json({ error: err.message }));
 
 // ─── Local Init ───────────────────────────────────────────────────────────────
-if (!USE_GITHUB) {
+if (!USE_SUPABASE) {
     if (!fs.existsSync(LOCAL_DATA))    fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
     if (!fs.existsSync(LOCAL_RESULTS)) fs.writeFileSync(LOCAL_RESULTS, '[]');
 }
@@ -370,7 +316,7 @@ if (!process.env.VERCEL) {
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`\n🚀 Server running at http://localhost:${PORT}`);
-        console.log(`   Mode: ${USE_GITHUB ? 'GitHub DB' : 'Local JSON'}`);
+        console.log(`   Mode: ${USE_SUPABASE ? 'Supabase Database' : 'Local JSON'}`);
     });
 }
 
