@@ -1762,9 +1762,22 @@
                                 } catch (e) {
                                     console.warn('Unable to cache server DB locally:', e.message || e);
                                 }
-                                migrateTeacherData();
                                 console.log('Database loaded/merged from server');
                             }
+                        }
+
+                        // Also fetch results separately if USE_SUPABASE is likely on or to be safe
+                        try {
+                            const rRes = await fetch(getApiBaseUrl() + '/api/results');
+                            if (rRes.ok) {
+                                const serverResults = await rRes.json();
+                                if (Array.isArray(serverResults) && serverResults.length > 0) {
+                                    db.results = mergeResults(db.results, serverResults);
+                                    console.log(`[INIT-SESSION] Loaded ${serverResults.length} results from server.`);
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Could not load /api/results on init session:', e.message);
                         }
                     } catch (err) {
                         console.warn('Failed to load from server:', err.message);

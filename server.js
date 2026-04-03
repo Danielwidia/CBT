@@ -72,7 +72,18 @@ async function readDB() {
         if (error && error.code !== 'PGRST116') {
              console.error('Supabase readDB error:', error);
         }
-        return data ? data.data : null;
+        let dbObj = data ? data.data : null;
+        if (dbObj) {
+            // Also fetch results separately and merge them into the database object
+            try {
+                const results = await readResults();
+                dbObj.results = results || [];
+            } catch (e) {
+                console.error('Error fetching results in readDB:', e.message);
+                if (!dbObj.results) dbObj.results = [];
+            }
+        }
+        return dbObj;
     }
     try {
         if (!fs.existsSync(LOCAL_DATA)) return null;
