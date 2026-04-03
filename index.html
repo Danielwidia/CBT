@@ -1516,15 +1516,24 @@
             cheatingCount++;
             console.warn(`Anti-Cheat Triggered: ${reason} (Attempt: ${cheatingCount})`);
 
-            if (cheatingCount >= 2) {
+            if (cheatingCount >= 3) {
                 // Final Strike - Auto Submit
                 isExamActive = false;
                 alert('UJIAN DIBERHENTIKAN! Anda terdeteksi melakukan kecurangan berkali-kali. Jawaban Anda telah dikirim.');
                 submitExam();
             } else {
-                // First Warning
+                // First or Second Warning
+                const attemptsLeft = 3 - cheatingCount;
+                const warningMsg = attemptsLeft === 1 ? 'Peringatan Terakhir!' : `Peringatan ${cheatingCount}!`;
+                
                 document.getElementById('cheat-warning-modal').classList.remove('hidden');
                 document.getElementById('cheat-warning-modal').classList.add('flex');
+                
+                // (Optional) Update modal text if there's a specific element for it
+                const warningText = document.getElementById('cheat-warning-text');
+                if (warningText) {
+                    warningText.innerText = `${reason}. ${warningMsg} Jika terdeteksi lagi, ujian akan dihentikan secara otomatis.`;
+                }
             }
         }
 

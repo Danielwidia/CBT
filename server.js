@@ -122,21 +122,42 @@ async function readResults() {
 
 async function writeResults(results) {
     if (USE_SUPABASE) {
-        // Because cbt_results does not have a unique constraint, we simply recreate the table records or insert 
-        // We will avoid full replacement for bulk and trust the admin dashboard to use `/api/result` primarily.
-        // However, if bulk write is needed, we map and insert.
-        const records = results.map(r => ({
-            student_id: r.studentId || '',
-            mapel: r.mapel || '',
-            rombel: r.rombel || '',
-            date: r.date || new Date().toISOString(),
-            score: typeof r.score === 'string' ? parseFloat(r.score) : r.score,
-            data: r
-        }));
-        // Optional: clear standard table if mimicking GitHub full sync, but we want persistence
-        // For standard bulk synchronization, append safely:
-        const { error } = await supabase.from('cbt_results').insert(records);
-        if (error) console.error('Supabase fetch error:', error.message);
+        // Separate deleted and active results
+        const toDelete = results.filter(r => r.deleted === true);
+        const active = results.filter(r => r.deleted !== true);
+
+        // 1. Physically delete from Supabase if marked for deletion
+        if (toDelete.length > 0) {
+            console.log(`🗑️ Deleting ${toDelete.length} results from Supabase...`);
+            for (const r of toDelete) {
+                const { error } = await supabase
+                    .from('cbt_results')
+                    .delete()
+                    .match({
+                        student_id: r.studentId || '',
+                        mapel: r.mapel || '',
+                        rombel: r.rombel || '',
+                        date: r.date || ''
+                    });
+                if (error) console.error('Supabase deletion error:', error.message);
+            }
+        }
+
+        // 2. Insert active results
+        // Note: For full synchronization, we only insert if not already present, 
+        // but current logic trusts admin dashboard for direct sync.
+        if (active.length > 0) {
+            const records = active.map(r => ({
+                student_id: r.studentId || '',
+                mapel: r.mapel || '',
+                rombel: r.rombel || '',
+                date: r.date || new Date().toISOString(),
+                score: typeof r.score === 'string' ? parseFloat(r.score) : r.score,
+                data: r
+            }));
+            const { error } = await supabase.from('cbt_results').insert(records);
+            if (error) console.error('Supabase bulk insert error:', error.message);
+        }
         return;
     }
     fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(results, null, 2), 'utf8');
@@ -144,15 +165,28 @@ async function writeResults(results) {
 
 async function insertResultSingle(resultObj) {
     if (USE_SUPABASE) {
-        const { error } = await supabase.from('cbt_results').insert({
-            student_id: resultObj.studentId || '',
-            mapel: resultObj.mapel || '',
-            rombel: resultObj.rombel || '',
-            date: resultObj.date || new Date().toISOString(),
-            score: typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score,
-            data: resultObj
-        });
-        if (error) throw new Error('Supabase insertResultSingle error: ' + error.message);
+        if (resultObj.deleted) {
+            const { error } = await supabase
+                .from('cbt_results')
+                .delete()
+                .match({
+                    student_id: resultObj.studentId || '',
+                    mapel: resultObj.mapel || '',
+                    rombel: resultObj.rombel || '',
+                    date: resultObj.date || ''
+                });
+            if (error) throw new Error('Supabase insertResultSingle(delete) error: ' + error.message);
+        } else {
+            const { error } = await supabase.from('cbt_results').insert({
+                student_id: resultObj.studentId || '',
+                mapel: resultObj.mapel || '',
+                rombel: resultObj.rombel || '',
+                date: resultObj.date || new Date().toISOString(),
+                score: typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score,
+                data: resultObj
+            });
+            if (error) throw new Error('Supabase insertResultSingle error: ' + error.message);
+        }
     } else {
         const merged = mergeResults(await readResults(), [resultObj]);
         fs.writeFileSync(LOCAL_RESULTS, JSON.stringify(merged, null, 2), 'utf8');
