@@ -316,7 +316,7 @@
                 <nav id="mobile-admin-nav"
                     class="lg:hidden bg-slate-900 text-white p-4 flex justify-between items-center">
                     <button onclick="toggleMobileMenu()" class="text-2xl"><i class="fas fa-bars"></i></button>
-                    <span class="font-bold">DORKAS ADMIN</span>
+                    <span class="font-bold">ADMIN CBT DORKAS</span>
                 </nav>
 
                 <!-- Mobile menu overlay -->
@@ -676,6 +676,32 @@
                                 <button onclick="updateAdminAccount()"
                                     class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all">SIMPAN
                                     PERUBAHAN</button>
+                            </div>
+                        </div>
+
+                        <!-- Remote Server Settings -->
+                        <div class="max-w-xl">
+                            <h2 class="text-2xl font-black text-slate-800 mb-2">Konfigurasi Server Remote</h2>
+                            <p class="text-slate-400 text-sm mb-8">Hubungkan ke backend eksternal (Render/Railway/Lokal)
+                                agar fitur AI dan Word/Excel bekerja di GitHub.</p>
+                            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">URL
+                                        Server Backend</label>
+                                    <input type="text" id="set-remote-url"
+                                        class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-sky-500 font-mono text-xs"
+                                        placeholder="https://app-name.onrender.com">
+                                    <p class="text-[10px] text-slate-400 mt-2 italic">Kosongkan jika ingin menggunakan
+                                        server default (relative).</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="clearRemoteServer()"
+                                        class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all">HAPUS</button>
+                                    <button onclick="saveRemoteServer()"
+                                        class="flex-1 py-3 bg-sky-600 text-white font-bold rounded-2xl hover:bg-sky-700 shadow-lg shadow-sky-100 transition-all">SIMPAN
+                                        URL</button>
+                                </div>
                             </div>
                         </div>
 
@@ -1440,14 +1466,25 @@
     <script>
         const DB_KEY = "EXAM_DORKAS_DATABASE_OFFICIAL";
         const SESSION_KEY = "EXAM_DORKAS_SESSION";
+        const REMOTE_SERVER_KEY = "EXAM_DORKAS_REMOTE_SERVER_URL";
         const IDB_DB_NAME = 'DORKAS_EXAM_STORAGE';
         const IDB_STORE = 'store';
 
-        // Returns the base URL for API calls - always points to the running server.
-        // Using window.location.origin ensures this works whether the user is on
-        // localhost, a network IP, or an IP assigned to the EXE server.
+        // Returns the base URL for API calls.
         function getApiBaseUrl() {
-            return window.location.origin;
+            // Priority 1: User-defined remote server from settings
+            const remote = localStorage.getItem(REMOTE_SERVER_KEY);
+            if (remote && remote.trim()) {
+                return remote.trim().replace(/\/$/, "");
+            }
+
+            // Priority 2: Direct file access (testing locally)
+            if (window.location.protocol === 'file:') {
+                return 'http://localhost:3000';
+            }
+
+            // Priority 3: Same origin (standard hosting)
+            return '';
         }
 
         // IndexedDB helpers - persistent storage with much larger quotas than
@@ -1532,16 +1569,6 @@
             };
         }
 
-        // Function to get API base URL
-        function getApiBaseUrl() {
-            if (window.location.protocol === 'file:') {
-                // When opened directly as file, use localhost
-                return 'http://localhost:3000';
-            } else {
-                // When served by server, use relative URLs
-                return '';
-            }
-        }
 
         // helper used during initialization to merge results from two sources
         function mergeResults(localArr = [], serverArr = []) {
@@ -1687,8 +1714,17 @@
 
                     // Then attempt server fetch; only override/merge if it looks sane
                     try {
-                        console.log('Loading database from server...');
-                        const res = await fetch(getApiBaseUrl() + '/api/db');
+                        console.log('Loading database from server/fallback...');
+                        let res = await fetch(getApiBaseUrl() + '/api/db');
+
+                        // FALLBACK: If API not found (e.g. GitHub Pages), try static database.json
+                        if (!res.ok && (res.status === 404 || res.status === 0)) {
+                            console.warn('API not found, trying static database.json fallback...');
+                            res = await fetch('database.json');
+                            window.isStaticMode = true;
+                            showStaticModeWarning();
+                        }
+
                         if (res.ok) {
                             const serverDb = await res.json();
                             if (serverDb && typeof serverDb === 'object' && serverDb.students) {
@@ -1779,8 +1815,17 @@
 
             // Try to load from server first
             try {
-                console.log('Loading database from server...');
-                const res = await fetch(getApiBaseUrl() + '/api/db');
+                console.log('Loading database from server/fallback...');
+                let res = await fetch(getApiBaseUrl() + '/api/db');
+
+                // FALLBACK: If API not found (e.g. GitHub Pages), try static database.json
+                if (!res.ok && (res.status === 404 || res.status === 0)) {
+                    console.warn('API not found, trying static database.json fallback...');
+                    res = await fetch('database.json');
+                    window.isStaticMode = true;
+                    showStaticModeWarning();
+                }
+
                 if (res.ok) {
                     const serverDb = await res.json();
                     if (serverDb && typeof serverDb === 'object' && serverDb.students) {
@@ -3080,10 +3125,25 @@
                     }
                 }
             } catch (err) {
-                console.warn('fetchAndMerge failed:', err);
+                console.warn('fetchAndMerge failed: Connection to server failed. Please check your network or server URL.');
             }
         }
 
+        function saveRemoteServer() {
+            const url = document.getElementById('set-remote-url').value.trim();
+            if (url) {
+                localStorage.setItem(REMOTE_SERVER_KEY, url);
+                alert('URL Server tersimpan! Halaman akan dimuat ulang.');
+                setTimeout(() => location.reload(), 1000);
+            }
+        }
+
+        function clearRemoteServer() {
+            localStorage.removeItem(REMOTE_SERVER_KEY);
+            document.getElementById('set-remote-url').value = '';
+            alert('URL Server dihapus! Kembali ke default.');
+            setTimeout(() => location.reload(), 1000);
+        }
 
         function showAdminSection(sec) {
             document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
@@ -3111,6 +3171,11 @@
                 document.getElementById('set-admin-id').value = admin.id;
                 renderTeacherSubjectCheckboxes();
                 renderTeachersList();
+                // Populate remote URL input from localStorage
+                const remoteUrlInput = document.getElementById('set-remote-url');
+                if (remoteUrlInput) {
+                    remoteUrlInput.value = localStorage.getItem(REMOTE_SERVER_KEY) || '';
+                }
             }
             // refresh hotspot status display whenever admin panel is shown
             if (typeof fetchHotspotStatus === 'function') fetchHotspotStatus();
@@ -4617,7 +4682,7 @@
                     // Fallback: If questions/answers were not saved in result, try to find them in the bank
                     let qSubQuestions = q.questions || [];
                     let qSubAnswers = q.answers || [];
-                    
+
                     if (qSubQuestions.length === 0) {
                         const originalQ = db.questions.find(orig => (orig.text === q.text || orig.type === 'matching') && orig.mapel === q.mapel && orig.rombel === q.rombel && orig.type === 'matching');
                         if (originalQ) {
@@ -5702,13 +5767,32 @@
                 }
             } catch (err) {
                 console.error('AI Generation Error:', err);
-                alert('Terjadi kesalahan saat memanggil AI.');
+                if (window.isStaticMode || window.location.hostname.includes('github.io')) {
+                    alert('Kesalahan AI: Fitur ini membutuhkan Backend Node.js yang berjalan.\n\nJika anda menjalankan di GitHub, silakan hubungkan ke Backend eksternal via Administrator > Settings.');
+                } else {
+                    alert('Terjadi kesalahan saat memanggil AI: ' + (err.message || 'Error tidak diketahui'));
+                }
             } finally {
                 if (loading) {
                     loading.classList.add('hidden');
                     loading.classList.remove('flex');
                 }
             }
+        }
+
+        function showStaticModeWarning() {
+            const warning = document.createElement('div');
+            warning.id = 'static-mode-warning';
+            warning.className = 'fixed bottom-4 right-4 bg-amber-600 text-white px-4 py-3 rounded-2xl shadow-2xl z-[9999] flex items-center gap-3 animate-bounce cursor-pointer';
+            warning.innerHTML = `
+                <div class="bg-white/20 w-8 h-8 rounded-full flex items-center justify-center"><i class="fas fa-exclamation-triangle"></i></div>
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80">Static Mode</p>
+                    <p class="text-xs font-bold leading-tight">Berjalan tanpa server. Perubahan tidak akan tersimpan ke server!</p>
+                </div>
+                <button class="ml-2 opacity-50 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            document.body.appendChild(warning);
         }
 
         // --- INIT ---
