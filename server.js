@@ -309,12 +309,14 @@ if (!supabase) {
     if (!fs.existsSync(RESULTS_FILE)) fs.writeFileSync(RESULTS_FILE, '[]');
 }
 
-// ─── Start ────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🚀 Server running at http://localhost:${PORT}`);
-    if (supabase) console.log('   Mode: Supabase (Cloud)');
-    else          console.log('   Mode: Local JSON files');
-});
+// ─── Start (skip listen when running on Vercel) ───────────────────────────────
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`\n🚀 Server running at http://localhost:${PORT}`);
+        if (supabase) console.log('   Mode: Supabase (Cloud)');
+        else          console.log('   Mode: Local JSON files');
+    });
+}
 
-module.exports = app; // required for Vercel
+module.exports = app; // required for Vercel serverless
