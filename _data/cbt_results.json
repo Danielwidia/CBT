@@ -31566,5 +31566,55 @@
         "answers": []
       }
     ]
+  },
+  {
+    "studentId": "DRKS-6598",
+    "studentName": "Vio",
+    "rombel": "IX",
+    "mapel": "PKN",
+    "score": "0.0",
+    "date": "2026-04-03T09:49:14.713Z",
+    "answers": [
+      [
+        "B",
+        "C",
+        "A"
+      ]
+    ],
+    "questions": [
+      {
+        "text": "menjodohkan",
+        "mapel": "PKN",
+        "rombel": "IX",
+        "type": "matching",
+        "images": [],
+        "questions": [
+          "23456543456543456u65434567654345A",
+          "3456754321234343123456543234565B",
+          "45654345ygfyt432234567C"
+        ],
+        "answers": [
+          "A",
+          "B",
+          "C"
+        ],
+        "correct": [
+          "A",
+          "B",
+          "C"
+        ],
+        "_shuffledAnswers": [
+          "A",
+          "B",
+          "C"
+        ],
+        "_shuffledQuestionIndices": [
+          2,
+          0,
+          1
+        ],
+        "options": []
+      }
+    ]
   }
 ]
