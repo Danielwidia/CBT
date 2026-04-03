@@ -30438,15 +30438,15 @@
     ]
   },
   {
-    "studentId": "DRKS-7325",
-    "studentName": "Lisa",
+    "studentId": "DRKS-1729",
+    "studentName": "Wahyu",
     "rombel": "VIII",
     "mapel": "Informatika",
-    "score": "1.7",
-    "date": "2026-04-03T06:43:54.293Z",
+    "score": "3.3",
+    "date": "2026-04-03T06:45:13.978Z",
     "answers": [
       3,
-      null,
+      1,
       null,
       null,
       null,
