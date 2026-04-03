@@ -1468,6 +1468,31 @@
                     WAKTU</button>
             </div>
         </div>
+
+        <!-- Cheat Warning Modal -->
+        <div id="cheat-warning-modal"
+            class="fixed inset-0 bg-red-900/95 hidden items-center justify-center p-4 z-[100] backdrop-blur-md">
+            <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl animate-bounce">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-exclamation-triangle text-4xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-2">PERINGATAN KERAS!</h3>
+                    <p class="text-slate-600 mb-8 leading-relaxed">Terdeteksi upaya keluar dari halaman ujian. <br><br><strong>Peringatan 1/1:</strong> Jika Anda keluar sekali lagi, ujian akan otomatis <strong>diberhentikan dan nilai dikirim</strong> apa adanya.</p>
+                    <button onclick="closeCheatWarning()"
+                        class="w-full py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-200 transition-all uppercase tracking-widest">SAYA MENGERTI</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anti-Cheat Content Mask (visible when tab inactive) -->
+        <div id="cheat-mask" class="fixed inset-0 bg-slate-900 z-[99] hidden items-center justify-center pointer-events-none">
+            <div class="text-center text-white p-8">
+                <i class="fas fa-eye-slash text-6xl mb-4 text-slate-500"></i>
+                <h3 class="text-xl font-bold">KONTEN DISEMBUNYIKAN</h3>
+                <p class="text-slate-400 text-sm">Kembali ke tab ujian untuk melanjutkan.</p>
+            </div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
@@ -1479,6 +1504,76 @@
         const REMOTE_SERVER_KEY = "EXAM_DORKAS_REMOTE_SERVER_URL";
         const IDB_DB_NAME = 'DORKAS_EXAM_STORAGE';
         const IDB_STORE = 'store';
+
+        // Global Anti-Cheat State
+        let isExamActive = false;
+        let cheatingCount = 0;
+
+        function handleCheating(reason) {
+            if (!isExamActive) return;
+            
+            // Increment cheat count
+            cheatingCount++;
+            console.warn(`Anti-Cheat Triggered: ${reason} (Attempt: ${cheatingCount})`);
+
+            if (cheatingCount >= 2) {
+                // Final Strike - Auto Submit
+                isExamActive = false;
+                alert('UJIAN DIBERHENTIKAN! Anda terdeteksi melakukan kecurangan berkali-kali. Jawaban Anda telah dikirim.');
+                submitExam();
+            } else {
+                // First Warning
+                document.getElementById('cheat-warning-modal').classList.remove('hidden');
+                document.getElementById('cheat-warning-modal').classList.add('flex');
+            }
+        }
+
+        function closeCheatWarning() {
+            document.getElementById('cheat-warning-modal').classList.add('hidden');
+            document.getElementById('cheat-warning-modal').classList.remove('flex');
+        }
+
+        // Anti-Cheat Event Listeners
+        document.addEventListener('visibilitychange', () => {
+            if (isExamActive) {
+                if (document.visibilityState === 'hidden') {
+                    // Mobile & Desktop: Mask content and trigger cheat detection
+                    document.getElementById('cheat-mask').classList.remove('hidden');
+                    document.getElementById('cheat-mask').classList.add('flex');
+                    handleCheating('Berpindah tab/aplikasi');
+                } else {
+                    document.getElementById('cheat-mask').classList.add('hidden');
+                    document.getElementById('cheat-mask').classList.remove('flex');
+                }
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            if (isExamActive) {
+                handleCheating('Meninggalkan jendela ujian');
+            }
+        });
+
+        // Anti-Copy & Select
+        document.addEventListener('contextmenu', e => isExamActive && e.preventDefault());
+        document.addEventListener('copy', e => isExamActive && e.preventDefault());
+        document.addEventListener('cut', e => isExamActive && e.preventDefault());
+        document.addEventListener('paste', e => isExamActive && e.preventDefault());
+        document.addEventListener('selectstart', e => isExamActive && e.preventDefault());
+
+        // Anti-Screenshot (PrintScreen)
+        document.addEventListener('keydown', e => {
+            if (isExamActive) {
+                // Detect PrintScreen (usually keyCode 44 or 'PrintScreen')
+                if (e.key === 'PrintScreen' || e.keyCode === 44) {
+                    e.preventDefault();
+                    handleCheating('Screenshot terdeteksi');
+                }
+                // Detect various dev tools shortcuts as well
+                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) e.preventDefault();
+                if (e.key === 'F12') e.preventDefault();
+            }
+        });
 
         // Returns the base URL for API calls.
         function getApiBaseUrl() {
@@ -2298,6 +2393,7 @@
         }
 
         function logout() {
+            isExamActive = false;
             clearSession();
             location.reload();
         }
@@ -5111,6 +5207,11 @@
             const ragu = normalizedQuestions.map(_ => false);
             examData = { mapel, questions: normalizedQuestions, currentIdx: 0, answers, ragu };
 
+            // Reset and start anti-cheat
+            cheatingCount = 0;
+            isExamActive = true;
+            document.getElementById('cheat-mask').classList.add('hidden');
+
             document.getElementById('student-exam-list').classList.add('hidden');
             document.getElementById('exam-screen').classList.remove('hidden');
             document.getElementById('exam-meta').innerText = `${mapel} | ${currentSiswa.rombel}`;
@@ -5488,7 +5589,9 @@
         }
 
         async function submitExam() {
+            isExamActive = false; // Disable anti-cheat immediately
             closeConfirmModal();
+            closeCheatWarning();
             clearInterval(examData.timer);
             let correctCount = 0;
 
