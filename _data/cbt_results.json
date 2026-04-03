@@ -31565,7 +31565,9 @@
         "questions": [],
         "answers": []
       }
-    ]
+    ],
+    "deleted": true,
+    "updatedAt": 1775209939312
   },
   {
     "studentId": "DRKS-6598",
