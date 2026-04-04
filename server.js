@@ -319,20 +319,12 @@ app.post('/api/generate-ai', async (req, res) => {
     const prompt = `Buatkan ${jumlah} soal pilihan ganda untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nFormat JSON array saja:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
     const models = [
         'gemini-3.1-pro',
+        'gemini-3.1-flash',
         'gemini-3-flash',
-        'gemini-3.1-flash-lite',
-        'nano-banana-2',
-        'gemini-3.1-flash-image',
-        'nano-banana-pro',
-        'gemini-3-pro-image',
         'gemini-2.5-pro',
         'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
         'gemini-1.5-pro',
-        'gemini-1.5-pro-latest',
-        'gemini-pro',
+        'gemini-1.5-flash',
         'gemini-1.0-pro'
     ];
     let lastError;
@@ -341,15 +333,29 @@ app.post('/api/generate-ai', async (req, res) => {
             const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_API_KEY}`,
                 { method: 'POST', headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-            if (!r.ok) { lastError = `${model}: HTTP ${r.status}`; continue; }
+            if (!r.ok) { 
+                const errData = await r.json().catch(() => ({}));
+                lastError = `${model}: ${r.status} - ${errData.error?.message || r.statusText}`; 
+                continue; 
+            }
             const j = await r.json();
-            const text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            let text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            
+            // Clean up JSON response
+            text = text.replace(/```json\n?|```/g, '').trim();
             const match = text.match(/\[[\s\S]*\]/);
-            if (!match) { lastError = 'No JSON in response'; continue; }
-            return res.json({ ok: true, questions: JSON.parse(match[0]) });
+            if (!match) { lastError = 'No JSON array in response'; continue; }
+            
+            try {
+                const parsed = JSON.parse(match[0]);
+                return res.json({ ok: true, questions: parsed });
+            } catch (e) {
+                lastError = 'JSON parse error: ' + e.message;
+                continue;
+            }
         } catch (e) { lastError = e.message; }
     }
-    return res.status(500).json({ error: lastError || 'AI generation failed' });
+    return res.status(500).json({ error: lastError || 'AI internal error' });
 });
 
 // ─── API: Kisi-kisi Generate ──────────────────────────────────────────────────
@@ -379,10 +385,14 @@ app.post('/api/generate-kisi-kisi', async (req, res) => {
         `Hanya kembalikan JSON array saja tanpa markdown code block.`;
 
     const models = [
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
+        'gemini-3.1-pro',
+        'gemini-3.1-flash',
+        'gemini-3-flash',
+        'gemini-2.5-pro',
+        'gemini-2.5-flash',
         'gemini-1.5-pro',
-        'gemini-pro'
+        'gemini-1.5-flash',
+        'gemini-1.0-pro'
     ];
     
     let lastError;
@@ -396,27 +406,35 @@ app.post('/api/generate-kisi-kisi', async (req, res) => {
                 });
             
             if (!r.ok) { 
-                lastError = `${model}: HTTP ${r.status}`; 
+                const errData = await r.json().catch(() => ({}));
+                lastError = `${model}: ${r.status} - ${errData.error?.message || r.statusText}`; 
                 continue; 
             }
             
             const j = await r.json();
-            const text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            let text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
             
-            // Clean AI response to get only JSON array
+            // Clean up JSON response
+            text = text.replace(/```json\n?|```/g, '').trim();
             const match = text.match(/\[[\s\S]*\]/);
             if (!match) { 
-                lastError = 'No JSON in response for ' + model; 
+                lastError = 'No JSON array in response for ' + model; 
                 continue; 
             }
             
-            return res.json({ ok: true, kisiKisi: JSON.parse(match[0]) });
+            try {
+                const parsed = JSON.parse(match[0]);
+                return res.json({ ok: true, kisiKisi: parsed });
+            } catch (e) {
+                lastError = 'JSON parse error: ' + e.message;
+                continue;
+            }
         } catch (e) { 
             console.error(`AI Error with model ${model}:`, e.message);
             lastError = e.message; 
         }
     }
-    return res.status(500).json({ error: lastError || 'AI generation failed' });
+    return res.status(500).json({ error: lastError || 'AI internal error' });
 });
 
 // ─── API: IPs ─────────────────────────────────────────────────────────────────
