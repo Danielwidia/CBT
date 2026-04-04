@@ -316,14 +316,21 @@ app.post('/api/import-word', upload.single('file'), async (req, res) => {
  * Helper to call Gemini with key rotation and model fallback
  */
 async function callGeminiAI(prompt) {
-    const keys = (process.env.GOOGLE_API_KEY || '').split(',').map(k => k.trim()).filter(k => k);
-    if (keys.length === 0) throw new Error('GOOGLE_API_KEY not configured');
+    const rawKey = process.env.GOOGLE_API_KEY || '';
+    const keys = rawKey.split(',').map(k => k.trim()).filter(k => k);
 
+    console.log('[AI] GOOGLE_API_KEY present:', rawKey.length > 0, '| Keys count:', keys.length);
+
+    if (keys.length === 0) throw new Error('GOOGLE_API_KEY tidak dikonfigurasi di Environment Variables Vercel');
+
+    // Use only current, non-deprecated Gemini models
     const models = [
+        'gemini-2.0-flash-001',
         'gemini-2.0-flash',
+        'gemini-1.5-flash-latest',
         'gemini-1.5-flash',
-        'gemini-1.5-pro',
-        'gemini-1.0-pro'
+        'gemini-1.5-pro-latest',
+        'gemini-1.5-pro'
     ];
 
     let lastError;
@@ -331,6 +338,8 @@ async function callGeminiAI(prompt) {
     for (const key of keys) {
         for (const model of models) {
             try {
+                console.log(`[AI] Trying model: ${model} with key: ${key.substring(0, 10)}...`);
+
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -339,35 +348,54 @@ async function callGeminiAI(prompt) {
 
                 if (response.ok) {
                     const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    const result = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    console.log(`[AI] Success with model: ${model}`);
+                    return result;
                 }
 
                 const errData = await response.json().catch(() => ({}));
                 const errMsg = errData.error?.message || response.statusText;
-                lastError = `${model}: ${response.status} - ${errMsg}`;
+                lastError = `${model}: HTTP ${response.status} - ${errMsg}`;
+                console.error(`[AI] Error with ${model}:`, lastError);
 
                 // If quota exceeded (429), break model loop to try NEXT KEY
                 if (response.status === 429) {
-                    console.warn(`Quota exceeded for key starting with ${key.substring(0, 8)}... Trying next key.`);
-                    break; 
+                    console.warn(`[AI] Quota exceeded for key ${key.substring(0, 10)}... Trying next key.`);
+                    break;
                 }
-                
-                // For other errors (like 500, 404), try next model with same key
-                console.error(`AI Error with ${model}:`, lastError);
+
+                // If model not found (404), skip to next model
+                if (response.status === 404) {
+                    console.warn(`[AI] Model ${model} not found, trying next model.`);
+                    continue;
+                }
+
             } catch (e) {
                 lastError = e.message;
-                console.error(`Fetch Error with ${model}:`, e.message);
+                console.error(`[AI] Fetch Error with ${model}:`, e.message);
             }
         }
     }
-    throw new Error(lastError || 'AI internal error');
+    throw new Error(lastError || 'Semua API key dan model AI gagal dipanggil');
 }
 
 app.post('/api/generate-ai', async (req, res) => {
     const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '' } = req.body;
     if (!materi) return res.status(400).json({ error: 'Materi is required' });
+
+    console.log(`[/api/generate-ai] Request: mapel=${mapel}, rombel=${rombel}, jumlah=${jumlah}, tipe=${tipe}`);
+    console.log(`[/api/generate-ai] GOOGLE_API_KEY configured: ${!!process.env.GOOGLE_API_KEY}`);
+
+    const typeMap = {
+        single: 'pilihan ganda biasa (1 jawaban benar)',
+        multiple: 'pilihan ganda kompleks (bisa lebih dari 1 jawaban benar)',
+        text: 'isian / uraian singkat',
+        tf: 'benar/salah (berikan 4 pernyataan per soal)',
+        matching: 'menjodohkan'
+    };
+    const tipeDeskripsi = typeMap[tipe] || 'pilihan ganda';
     
-    const prompt = `Buatkan ${jumlah} soal pilihan ganda untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nFormat JSON array saja:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
+    const prompt = `Buatkan ${jumlah} soal bertipe ${tipeDeskripsi} untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nBalas HANYA dengan JSON array valid tanpa markdown, contoh format:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
     
     try {
         let text = await callGeminiAI(prompt);
@@ -375,11 +403,16 @@ app.post('/api/generate-ai', async (req, res) => {
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
         const match = text.match(/\[[\s\S]*\]/);
-        if (!match) return res.status(500).json({ error: 'No JSON array in AI response' });
+        if (!match) {
+            console.error('[/api/generate-ai] AI returned no JSON array. Raw response:', text.substring(0, 200));
+            return res.status(500).json({ error: 'AI tidak mengembalikan data soal yang valid. Coba lagi.' });
+        }
         
         const parsed = JSON.parse(match[0]);
+        console.log(`[/api/generate-ai] Success: generated ${parsed.length} questions`);
         return res.json({ ok: true, questions: parsed });
     } catch (e) {
+        console.error('[/api/generate-ai] Fatal error:', e.message);
         return res.status(500).json({ error: e.message });
     }
 });
