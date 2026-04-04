@@ -416,7 +416,13 @@
                                     class="fas fa-random"></i> Acak Urutan</button>
                             <button onclick="openImportModal()"
                                 class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 flex items-center gap-2"><i
-                                    class="fas fa-file-import"></i> Import Word</button>
+                                    class="fas fa-file-word"></i> Import Word</button>
+                            <button onclick="exportQuestions()"
+                                class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 flex items-center gap-2"><i
+                                    class="fas fa-file-export"></i> Export JSON</button>
+                            <button onclick="importQuestionsJSON()"
+                                class="px-4 py-2.5 bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-cyan-700 hover:shadow-lg hover:shadow-cyan-200 flex items-center gap-2"><i
+                                    class="fas fa-file-import"></i> Import JSON</button>
                             <button onclick="openQuestionModal()"
                                 class="px-4 py-2.5 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700 hover:shadow-lg hover:shadow-sky-200 flex items-center gap-2"><i
                                     class="fas fa-plus"></i> Soal Baru</button>
@@ -1220,6 +1226,12 @@
                             <button onclick="openTeacherQuestionModal()"
                                 class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700">+
                                 Soal Baru</button>
+                            <button onclick="exportQuestions()"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-blue-700 flex items-center gap-2"><i
+                                    class="fas fa-file-export"></i> Export JSON</button>
+                            <button onclick="importQuestionsJSON()"
+                                class="px-4 py-2 bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-cyan-700 flex items-center gap-2"><i
+                                    class="fas fa-file-import"></i> Import JSON</button>
                             <button onclick="openTeacherAiModal()"
                                 class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
                                     class="fas fa-robot"></i> Buat Soal AI</button>
@@ -4111,6 +4123,93 @@
             renderTeacherQuestions();
             updateStats();
             alert(`${toDelete.length} soal berhasil dihapus.`);
+        }
+
+        function exportQuestions() {
+            let questionsToExport = [];
+            if (window.isTeacherMode || (currentSiswa && currentSiswa.role === 'teacher')) {
+                // Konteks guru: export sesuai filter yang aktif dan hanya soal milik guru tersebut
+                const fM = document.getElementById('teacher-filter-mapel')?.value || '';
+                const fR = document.getElementById('teacher-filter-rombel')?.value || '';
+                questionsToExport = db.questions.filter(q => {
+                    const qSubject = typeof q.mapel === 'string' ? q.mapel : q.mapel?.name || q.mapel;
+                    if (!teacherSubjectNames(currentSiswa).includes(qSubject)) return false;
+                    const allowed = teacherAllowedRombels(currentSiswa, qSubject);
+                    if (!allowed.includes(q.rombel)) return false;
+                    if (fM && qSubject !== fM) return false;
+                    if (fR && q.rombel !== fR) return false;
+                    return true;
+                });
+            } else {
+                // Konteks admin: export sesuai filter admin
+                const fR = document.getElementById('filter-rombel').value;
+                const fM = document.getElementById('filter-mapel').value;
+                questionsToExport = db.questions.filter(q =>
+                    (fR === 'ALL' || q.rombel === fR) && (fM === 'ALL' || q.mapel === fM)
+                );
+            }
+
+            if (questionsToExport.length === 0) {
+                alert('Tidak ada soal yang bisa diexport berdasarkan filter saat ini.');
+                return;
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questionsToExport, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `soal_cbt_export_${new Date().getTime()}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importQuestionsJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!Array.isArray(imported)) {
+                            alert('Format file JSON tidak valid. Harus berupa array soal (JSON).');
+                            return;
+                        }
+
+                        let added = 0;
+                        imported.forEach(q => {
+                            // Validasi dasar minimal ada text dan type soal
+                            if (q.text && q.type) {
+                                db.questions.push(q);
+                                added++;
+                            }
+                        });
+
+                        if (added > 0) {
+                            save();
+                            if (window.isTeacherMode || (currentSiswa && currentSiswa.role === 'teacher')) {
+                                renderTeacherQuestions();
+                            } else {
+                                renderAdminQuestions();
+                            }
+                            updateStats();
+                            alert(`${added} soal berhasil diimport.`);
+                        } else {
+                            alert('Tidak ada soal valid yang ditemukan dalam file ini.');
+                        }
+                    } catch (err) {
+                        alert('Gagal memproses file JSON: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
         }
 
         function moveQuestionUp(idx) {
