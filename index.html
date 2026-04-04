@@ -99,15 +99,22 @@
     <script src="assets/js/core.js"></script>
     <script>
         async function init() {
+            // Check if core.js is loaded
+            if (typeof SESSION_KEY === 'undefined') {
+                console.warn('Waiting for core.js...');
+                setTimeout(init, 500);
+                return;
+            }
+
             // First attempt server fetch
             try {
                 console.log('Loading database from server...');
-                let res = await fetch(getApiBaseUrl() + '/api/db');
+                var res = await fetch(getApiBaseUrl() + '/api/db');
                 if (!res.ok && (res.status === 404 || res.status === 0)) {
                     res = await fetch('database.json');
                 }
                 if (res.ok) {
-                    const serverDb = await res.json();
+                    var serverDb = await res.json();
                     if (serverDb && typeof serverDb === 'object') {
                         db = normalizeDb(serverDb);
                         console.log('Database loaded from server');
@@ -119,9 +126,9 @@
 
             // Fallback: load from local store
             try {
-                const saved = await loadLocalDb();
-                if (saved) {
-                    db = saved;
+                var savedLocal = await loadLocalDb();
+                if (savedLocal) {
+                    db = savedLocal;
                     console.log('Database loaded from local store');
                 }
             } catch (e) {
@@ -129,10 +136,10 @@
             }
 
             // Check session
-            const saved = localStorage.getItem(SESSION_KEY);
+            var saved = localStorage.getItem(SESSION_KEY);
             if (saved) {
                 try {
-                    const session = JSON.parse(saved);
+                    var session = JSON.parse(saved);
                     if (session && session.user) {
                         redirectUser(session.user.role);
                     }
@@ -168,13 +175,13 @@
         }
 
         function handleLogin() {
-            const u = document.getElementById('username').value.trim().toUpperCase();
-            const p = document.getElementById('password').value.trim();
-            const type = window.loginType;
+            var u = document.getElementById('username').value.trim().toUpperCase();
+            var p = document.getElementById('password').value.trim();
+            var type = window.loginType;
 
-            if (!db.students) return alert('Database belum siap!');
+            if (typeof db === 'undefined' || !db.students) return alert('Database belum siap atau sistem mengalami kendala memuat data!');
 
-            let user = db.students.find(x => x.id.toUpperCase() === u && x.password === p);
+            var user = db.students.find(x => x.id.toUpperCase() === u && x.password === p);
 
             // Special case for students: search by name
             if (!user && type === 'student') {

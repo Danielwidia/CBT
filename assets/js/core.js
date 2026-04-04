@@ -1,11 +1,11 @@
-const DB_KEY = "EXAM_DORKAS_DATABASE_OFFICIAL";
-const SESSION_KEY = "EXAM_DORKAS_SESSION";
-const REMOTE_SERVER_KEY = "EXAM_DORKAS_REMOTE_SERVER_URL";
-const IDB_DB_NAME = 'DORKAS_EXAM_STORAGE';
-const IDB_STORE = 'store';
+var DB_KEY = "EXAM_DORKAS_DATABASE_OFFICIAL";
+var SESSION_KEY = "EXAM_DORKAS_SESSION";
+var REMOTE_SERVER_KEY = "EXAM_DORKAS_REMOTE_SERVER_URL";
+var IDB_DB_NAME = 'DORKAS_EXAM_STORAGE';
+var IDB_STORE = 'store';
 
 // Global Database Object with defaults
-let db = {
+var db = {
     subjects: [{ name: "Pendidikan Agama", locked: false }, { name: "Bahasa Indonesia", locked: false }, { name: "Matematika", locked: false }, { name: "IPA", locked: false }, { name: "IPS", locked: false }, { name: "Bahasa Inggris", locked: false }],
     rombels: ["VII", "VIII", "IX"],
     questions: [],
@@ -15,7 +15,9 @@ let db = {
     timeLimits: {}
 };
 
-let currentSiswa = null;
+console.log('Core initialized');
+
+var currentSiswa = null;
 
 // --- UTILS ---
 
