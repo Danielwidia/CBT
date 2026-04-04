@@ -2163,22 +2163,8 @@
 
             while (retries > 0 && !serverSaveSuccess) {
                 try {
-                    // Strip heavy image data from questions before sending to server
-                    // Images are stored locally in IndexedDB; server only needs text/metadata
-                    const dbForServer = {
-                        ...db,
-                        questions: (db.questions || []).map(q => {
-                            if (!q.images || q.images.length === 0) return q;
-                            return {
-                                ...q, images: q.images.map(img => ({
-                                    name: img.name || '',
-                                    type: img.type || '',
-                                    // Strip base64 data – images are kept in local IDB
-                                    data: '[IMAGE_LOCAL_ONLY]'
-                                }))
-                            };
-                        })
-                    };
+                    // Images are now synced with server to fix broken images in Supabase cross-device.
+                    const dbForServer = db;
                     const res = await fetch(getApiBaseUrl() + '/api/db', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -3747,7 +3733,7 @@
                     const thumb = document.createElement('div');
                     thumb.className = 'relative w-24 h-24 border-2 border-dashed border-sky-300 rounded-lg overflow-hidden';
                     const imgEl = document.createElement('img');
-                    imgEl.src = img;
+                    imgEl.src = typeof img === 'string' ? img : (img.data || '');
                     imgEl.className = 'w-full h-full object-cover';
                     const badge = document.createElement('div');
                     badge.className = 'absolute top-1 right-1 bg-sky-600 text-white text-xs rounded px-1 font-bold';
@@ -3770,7 +3756,7 @@
                 const thumb = document.createElement('div');
                 thumb.className = 'relative w-24 h-24 border-2 border-dashed border-sky-300 rounded-lg overflow-hidden';
                 const imgEl = document.createElement('img');
-                imgEl.src = q.image;
+                imgEl.src = typeof q.image === 'string' ? q.image : (q.image.data || '');
                 imgEl.className = 'w-full h-full object-cover';
                 const badge = document.createElement('div');
                 badge.className = 'absolute top-1 right-1 bg-sky-600 text-white text-xs rounded px-1 font-bold';
@@ -5105,15 +5091,17 @@
                 if (q.images && Array.isArray(q.images) && q.images.length > 0) {
                     content += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">';
                     q.images.forEach((img, imgIdx) => {
+                        const imgSrc = typeof img === 'string' ? img : (img.data || '');
                         content += `<div class="relative">
-                            <img src="${img}" alt="Gambar soal ${imgIdx + 1}" class="w-full h-auto rounded-lg border border-slate-300 shadow-sm">
+                            <img src="${imgSrc}" alt="Gambar soal ${imgIdx + 1}" class="w-full h-auto rounded-lg border border-slate-300 shadow-sm">
                             <span class="absolute top-2 right-2 bg-sky-600 text-white text-xs font-bold px-2 py-1 rounded">${imgIdx + 1}</span>
                         </div>`;
                     });
                     content += '</div>';
                 } else if (q.image) {
                     // Backward compatibility for single image
-                    content += `<img src="${q.image}" alt="Gambar soal" class="mb-4 max-w-full h-auto rounded-lg border border-slate-300 shadow-sm">`;
+                    const imgSrcSingle = typeof q.image === 'string' ? q.image : (q.image.data || '');
+                    content += `<img src="${imgSrcSingle}" alt="Gambar soal" class="mb-4 max-w-full h-auto rounded-lg border border-slate-300 shadow-sm">`;
                 }
 
                 // Display options and answers
@@ -5612,8 +5600,9 @@
             imgContainer.innerHTML = '';
             if (q.images && Array.isArray(q.images) && q.images.length > 0) {
                 q.images.forEach((img, imgIdx) => {
+                    const imgSrc = typeof img === 'string' ? img : (img.data || '');
                     imgContainer.innerHTML += `<div class="relative w-full cursor-pointer group hover:opacity-90 transition-opacity" onclick="openImageZoom(${idx}, ${imgIdx})">
-                        <img src="${img}" alt="Gambar soal ${imgIdx + 1}" class="w-full h-auto rounded-lg border border-slate-300 shadow-sm object-contain" loading="lazy">
+                        <img src="${imgSrc}" alt="Gambar soal ${imgIdx + 1}" class="w-full h-auto rounded-lg border border-slate-300 shadow-sm object-contain" loading="lazy">
                         <span class="absolute top-2 right-2 bg-sky-600 text-white text-xs font-bold px-2 py-1 rounded">${imgIdx + 1}</span>
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                             <i class="fas fa-search-plus text-white text-3xl"></i>
@@ -5622,8 +5611,9 @@
                 });
                 imgContainer.classList.remove('hidden');
             } else if (q.image) {
+                const imgSrcSingle = typeof q.image === 'string' ? q.image : (q.image.data || '');
                 imgContainer.innerHTML = `<div class="relative w-full cursor-pointer group hover:opacity-90 transition-opacity" onclick="openImageZoom(${idx}, 0)">
-                    <img src="${q.image}" alt="Gambar soal" class="w-full h-auto rounded-lg border border-slate-300 shadow-sm object-contain" loading="lazy">
+                    <img src="${imgSrcSingle}" alt="Gambar soal" class="w-full h-auto rounded-lg border border-slate-300 shadow-sm object-contain" loading="lazy">
                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                         <i class="fas fa-search-plus text-white text-3xl"></i>
                     </div>
@@ -6170,7 +6160,8 @@
                         return;
                     }
 
-                    zoomImage.src = images[imgIdx];
+                    const zoomImgSrc = typeof images[imgIdx] === 'string' ? images[imgIdx] : (images[imgIdx].data || '');
+                    zoomImage.src = zoomImgSrc;
                     counter.textContent = `${imgIdx + 1}/${images.length}`;
                     zoomModal.classList.remove('hidden');
                     zoomModal.style.display = 'flex';
@@ -6201,7 +6192,8 @@
             currentZoomImageIndex = (currentZoomImageIndex + 1) % images.length;
             const zoomImage = document.getElementById('zoom-image-display');
             const counter = document.getElementById('zoom-image-counter');
-            zoomImage.src = images[currentZoomImageIndex];
+            const zoomImgSrc = typeof images[currentZoomImageIndex] === 'string' ? images[currentZoomImageIndex] : (images[currentZoomImageIndex].data || '');
+            zoomImage.src = zoomImgSrc;
             counter.textContent = `${currentZoomImageIndex + 1}/${images.length}`;
         }
 
@@ -6211,7 +6203,8 @@
             currentZoomImageIndex = (currentZoomImageIndex - 1 + images.length) % images.length;
             const zoomImage = document.getElementById('zoom-image-display');
             const counter = document.getElementById('zoom-image-counter');
-            zoomImage.src = images[currentZoomImageIndex];
+            const zoomImgSrc = typeof images[currentZoomImageIndex] === 'string' ? images[currentZoomImageIndex] : (images[currentZoomImageIndex].data || '');
+            zoomImage.src = zoomImgSrc;
             counter.textContent = `${currentZoomImageIndex + 1}/${images.length}`;
         }
 
