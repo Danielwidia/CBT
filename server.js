@@ -9,7 +9,8 @@ const { parseWordDocument } = require('./wordParser');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ limit: '20mb', extended: true }));
 
 const rootPath = __dirname;
 
@@ -126,11 +127,12 @@ async function writeResults(results) {
         const toDelete = results.filter(r => r.deleted === true);
         const active = results.filter(r => r.deleted !== true);
 
-        // 1. Physically delete from Supabase if marked for deletion
+        // 1. Physically delete from Supabase if marked for deletion (Optimized)
         if (toDelete.length > 0) {
             console.log(`🗑️ Deleting ${toDelete.length} results from Supabase...`);
-            for (const r of toDelete) {
-                const { error } = await supabase
+            // Run deletions in parallel with a limited concurrency or just Promise.all if count is small
+            await Promise.all(toDelete.map(r => 
+                supabase
                     .from('cbt_results')
                     .delete()
                     .match({
@@ -138,9 +140,8 @@ async function writeResults(results) {
                         mapel: r.mapel || '',
                         rombel: r.rombel || '',
                         date: r.date || ''
-                    });
-                if (error) console.error('Supabase deletion error:', error.message);
-            }
+                    })
+            ));
         }
 
         // 2. Insert active results
