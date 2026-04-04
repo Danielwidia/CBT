@@ -98,10 +98,27 @@
 
     <script src="assets/js/core.js"></script>
     <script>
+        var initRetries = 0;
         async function init() {
             // Check if core.js is loaded
             if (typeof SESSION_KEY === 'undefined') {
-                console.warn('Waiting for core.js...');
+                initRetries++;
+                if (initRetries > 20) { // Approx 10 seconds
+                    document.body.innerHTML = `
+                        <div class="min-h-screen flex items-center justify-center bg-slate-50 p-6 font-sans text-center">
+                            <div class="max-w-sm w-full bg-white p-10 rounded-[32px] shadow-2xl border border-red-50">
+                                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-6">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <h1 class="text-xl font-black text-slate-800 mb-2">Gagal Memuat Sistem</h1>
+                                <p class="text-slate-500 text-xs font-medium leading-relaxed mb-8">Data inti aplikasi (core.js) gagal dimuat. Pastikan koneksi stabil atau coba Deploy ulang di Vercel.</p>
+                                <button onclick="location.reload()" class="w-full py-4 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-700 shadow-xl shadow-sky-100 transition-all">Segarkan Halaman</button>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                console.warn('Waiting for core.js... (Attempt ' + initRetries + ')');
                 setTimeout(init, 500);
                 return;
             }
