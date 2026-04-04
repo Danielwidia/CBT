@@ -425,7 +425,7 @@
                                     class="fas fa-robot"></i> Buat Soal AI</button>
                             <button onclick="deleteFilteredQuestions()"
                                 class="px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 flex items-center gap-2"><i
-                                    class="fas fa-trash-alt"></i> Hapus Soal</button>
+                                    class="fas fa-trash-alt"></i> Hapus Soal Terfilter</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -924,589 +924,586 @@
     </div>
 
     <!-- Saving Data Modal for Sequential Render/Deploy Queue -->
-    <div id="saving-modal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-[110] backdrop-blur-sm">
+    <div id="saving-modal"
+        class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-[110] backdrop-blur-sm">
         <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center">
-            <div class="w-16 h-16 border-4 border-sky-100 border-t-sky-600 rounded-full animate-spin mx-auto mb-6"></div>
+            <div class="w-16 h-16 border-4 border-sky-100 border-t-sky-600 rounded-full animate-spin mx-auto mb-6">
+            </div>
             <h3 class="text-xl font-black text-slate-800 mb-2">Menyimpan Nilai...</h3>
-            <p class="text-sm text-slate-500 mb-4">Mohon tunggu, sistem sedang memproses antrian Anda untuk memastikan tidak ada nilai yang hilang atau tidak tersimpan.</p>
+            <p class="text-sm text-slate-500 mb-4">Mohon tunggu, sistem sedang memproses antrian Anda untuk memastikan
+                tidak ada nilai yang hilang atau tidak tersimpan.</p>
         </div>
     </div>
 
     <!-- Modals -->
-        <div id="config-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl max-w-xs w-full p-8 shadow-2xl animate-fade-in">
-                <h3 id="config-title" class="text-xl font-black mb-6">Konfigurasi</h3>
-                <input type="text" id="config-input"
-                    class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-sky-500 mb-4 font-bold"
-                    placeholder="Nama entitas...">
-                <div class="flex gap-2">
-                    <button onclick="closeModals()"
-                        class="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-xl">BATAL</button>
-                    <button onclick="saveConfig()"
-                        class="flex-1 py-3 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700">TAMBAH</button>
-                </div>
+    <div id="config-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-xs w-full p-8 shadow-2xl animate-fade-in">
+            <h3 id="config-title" class="text-xl font-black mb-6">Konfigurasi</h3>
+            <input type="text" id="config-input"
+                class="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-sky-500 mb-4 font-bold"
+                placeholder="Nama entitas...">
+            <div class="flex gap-2">
+                <button onclick="closeModals()"
+                    class="flex-1 py-3 bg-slate-100 text-slate-500 font-bold rounded-xl">BATAL</button>
+                <button onclick="saveConfig()"
+                    class="flex-1 py-3 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700">TAMBAH</button>
             </div>
         </div>
+    </div>
 
-        <!-- Import Siswa Excel Modal -->
-        <div id="import-siswa-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div
-                class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-black">Import Data Siswa (Excel)</h3>
-                    <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
-                            class="fas fa-times"></i></button>
-                </div>
-                <div
-                    class="bg-sky-50 border border-sky-100 p-4 rounded-2xl mb-4 text-[11px] leading-tight text-sky-800">
-                    <b>Cara Import:</b><br>
-                    1. Siapkan Excel dengan 2 kolom: <b>[Nama Lengkap]</b> dan <b>[Rombel]</b>.<br>
-                    2. Salin (Copy) datanya saja atau pilih file Excel menggunakan tombol di bawah.<br>
-                    3. Tempel (Paste) di kotak berikut atau tunggu sampai file selesai diproses.<br>
-                    <i>ID akan dibuat otomatis, Password standar: 123456</i>
-                </div>
-                <input type="file" id="import-excel-file" accept=".xls,.xlsx" class="text-sm mb-4"
-                    onchange="handleExcelFile(event)">
-                <textarea id="import-siswa-area"
-                    class="flex-1 min-h-[250px] p-4 bg-slate-50 rounded-2xl outline-none text-sm mb-4 font-mono custom-scrollbar"
-                    placeholder="Contoh:&#10;Daniel VII&#10;Widiatmoko VIII"></textarea>
-                <button onclick="processImportSiswa()"
-                    class="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all">IMPORT
-                    SEKARANG</button>
+    <!-- Import Siswa Excel Modal -->
+    <div id="import-siswa-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-black">Import Data Siswa (Excel)</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
             </div>
-        </div>
-
-        <div id="import-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div
-                class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-black">Import Soal dari Word</h3>
-                    <button onclick="closeModals()" class="text-slate-400"><i class="fas fa-times"></i></button>
-                </div>
-                <div
-                    class="bg-amber-50 border border-amber-100 p-4 rounded-2xl mb-4 text-[11px] leading-tight text-amber-800">
-                    <b>Panduan Copas:</b> 1. Apa warna bendera kita? A. Merah Putih B. Biru (dst) Kunci: A
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <select id="import-mapel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
-                    <select id="import-rombel"
-                        class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
-                </div>
-                <div class="flex flex-col gap-3">
-                    <input type="file" id="import-word-file" accept=".doc,.docx" class="text-sm"
-                        onchange="handleWordFile(event)">
-                    <div id="import-backend-warning" class="text-red-500 text-xs italic"></div>
-                    <textarea id="import-text-area"
-                        class="flex-1 min-h-[250px] p-4 bg-slate-50 rounded-2xl outline-none text-sm"
-                        placeholder="Tempel teks soal di sini..."></textarea>
-                </div>
-                <button onclick="processImport()"
-                    class="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl">PROSES IMPORT</button>
+            <div class="bg-sky-50 border border-sky-100 p-4 rounded-2xl mb-4 text-[11px] leading-tight text-sky-800">
+                <b>Cara Import:</b><br>
+                1. Siapkan Excel dengan 2 kolom: <b>[Nama Lengkap]</b> dan <b>[Rombel]</b>.<br>
+                2. Salin (Copy) datanya saja atau pilih file Excel menggunakan tombol di bawah.<br>
+                3. Tempel (Paste) di kotak berikut atau tunggu sampai file selesai diproses.<br>
+                <i>ID akan dibuat otomatis, Password standar: 123456</i>
             </div>
+            <input type="file" id="import-excel-file" accept=".xls,.xlsx" class="text-sm mb-4"
+                onchange="handleExcelFile(event)">
+            <textarea id="import-siswa-area"
+                class="flex-1 min-h-[250px] p-4 bg-slate-50 rounded-2xl outline-none text-sm mb-4 font-mono custom-scrollbar"
+                placeholder="Contoh:&#10;Daniel VII&#10;Widiatmoko VIII"></textarea>
+            <button onclick="processImportSiswa()"
+                class="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 transition-all">IMPORT
+                SEKARANG</button>
         </div>
+    </div>
 
-        <div id="question-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div id="import-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-black">Import Soal dari Word</h3>
+                <button onclick="closeModals()" class="text-slate-400"><i class="fas fa-times"></i></button>
+            </div>
             <div
-                class="bg-white rounded-3xl max-w-xl w-full p-8 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 id="question-modal-title" class="text-xl font-black">Buat Soal Baru</h3>
-                    <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
-                            class="fas fa-times"></i></button>
-                </div>
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    <select id="q-mapel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
-                    <select id="q-rombel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
-                    <select id="q-type" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"
-                        onchange="updateQuestionTypeDisplay(this.value)">
-                        <option value="single">Pilihan Ganda</option>
-                        <option value="multiple">Pilihan Ganda Kompleks</option>
-                        <option value="text">Uraian/Esai</option>
-                        <option value="tf">Benar/Salah</option>
-                        <option value="matching">Menjodohkan</option>
+                class="bg-amber-50 border border-amber-100 p-4 rounded-2xl mb-4 text-[11px] leading-tight text-amber-800">
+                <b>Panduan Copas:</b> 1. Apa warna bendera kita? A. Merah Putih B. Biru (dst) Kunci: A
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <select id="import-mapel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
+                <select id="import-rombel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
+            </div>
+            <div class="flex flex-col gap-3">
+                <input type="file" id="import-word-file" accept=".doc,.docx" class="text-sm"
+                    onchange="handleWordFile(event)">
+                <div id="import-backend-warning" class="text-red-500 text-xs italic"></div>
+                <textarea id="import-text-area"
+                    class="flex-1 min-h-[250px] p-4 bg-slate-50 rounded-2xl outline-none text-sm"
+                    placeholder="Tempel teks soal di sini..."></textarea>
+            </div>
+            <button onclick="processImport()" class="w-full py-4 bg-emerald-600 text-white font-bold rounded-2xl">PROSES
+                IMPORT</button>
+        </div>
+    </div>
+
+    <div id="question-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-3xl max-w-xl w-full p-8 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="question-modal-title" class="text-xl font-black">Buat Soal Baru</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <select id="q-mapel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
+                <select id="q-rombel" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"></select>
+                <select id="q-type" class="p-3 bg-slate-50 rounded-xl border-none text-xs font-bold"
+                    onchange="updateQuestionTypeDisplay(this.value)">
+                    <option value="single">Pilihan Ganda</option>
+                    <option value="multiple">Pilihan Ganda Kompleks</option>
+                    <option value="text">Uraian/Esai</option>
+                    <option value="tf">Benar/Salah</option>
+                    <option value="matching">Menjodohkan</option>
+                </select>
+            </div>
+            <textarea id="q-text" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 h-32 outline-none text-sm"
+                placeholder="Pertanyaan..."></textarea>
+            <div class="mb-4">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Gambar Soal
+                    (Multiple)</label>
+                <input type="file" id="q-image-file" accept="image/*" multiple class="mb-2 text-sm"
+                    onchange="previewQuestionImages(event)">
+                <div id="q-images-preview" class="flex flex-wrap gap-2"></div>
+                <div id="q-images-list" class="space-y-1 text-xs text-slate-500"></div>
+            </div>
+            <div class="space-y-2 mb-6" id="q-opts-container">
+                <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
+                    placeholder="Opsi A">
+                <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
+                    placeholder="Opsi B">
+                <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
+                    placeholder="Opsi C">
+                <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
+                    placeholder="Opsi D">
+            </div>
+            <div id="q-answer-text-container" class="hidden mb-6">
+                <textarea id="q-answer-text" class="w-full p-3 bg-slate-50 rounded-2xl h-24"
+                    placeholder="Jawaban benar (tulis esai)"></textarea>
+            </div>
+            <div id="q-tf-container" class="hidden mb-6">
+                <!-- rows dynamically added -->
+                <div class="tf-row flex items-center gap-2">
+                    <input type="text" class="tf-statement flex-1 p-3 bg-slate-50 rounded-xl text-sm border-none"
+                        placeholder="Pernyataan">
+                    <select class="tf-correct p-3 bg-slate-50 rounded-xl text-sm border-none">
+                        <option value="">--Benar/Salah--</option>
+                        <option value="true">Benar</option>
+                        <option value="false">Salah</option>
                     </select>
+                    <button type="button" onclick="removeTfRow(this)" class="text-red-500">&times;</button>
                 </div>
-                <textarea id="q-text" class="w-full p-4 bg-slate-50 rounded-2xl mb-4 h-32 outline-none text-sm"
-                    placeholder="Pertanyaan..."></textarea>
-                <div class="mb-4">
-                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Gambar Soal
-                        (Multiple)</label>
-                    <input type="file" id="q-image-file" accept="image/*" multiple class="mb-2 text-sm"
-                        onchange="previewQuestionImages(event)">
-                    <div id="q-images-preview" class="flex flex-wrap gap-2"></div>
-                    <div id="q-images-list" class="space-y-1 text-xs text-slate-500"></div>
-                </div>
-                <div class="space-y-2 mb-6" id="q-opts-container">
-                    <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
-                        placeholder="Opsi A">
-                    <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
-                        placeholder="Opsi B">
-                    <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
-                        placeholder="Opsi C">
-                    <input type="text" class="q-opt w-full p-3 bg-slate-50 rounded-xl text-sm border-none"
-                        placeholder="Opsi D">
-                </div>
-                <div id="q-answer-text-container" class="hidden mb-6">
-                    <textarea id="q-answer-text" class="w-full p-3 bg-slate-50 rounded-2xl h-24"
-                        placeholder="Jawaban benar (tulis esai)"></textarea>
-                </div>
-                <div id="q-tf-container" class="hidden mb-6">
-                    <!-- rows dynamically added -->
-                    <div class="tf-row flex items-center gap-2">
-                        <input type="text" class="tf-statement flex-1 p-3 bg-slate-50 rounded-xl text-sm border-none"
-                            placeholder="Pernyataan">
-                        <select class="tf-correct p-3 bg-slate-50 rounded-xl text-sm border-none">
-                            <option value="">--Benar/Salah--</option>
-                            <option value="true">Benar</option>
-                            <option value="false">Salah</option>
-                        </select>
-                        <button type="button" onclick="removeTfRow(this)" class="text-red-500">&times;</button>
-                    </div>
-                    <button type="button" onclick="addTfRow()" class="mt-2 text-sm text-sky-600">+ Tambah
-                        Pernyataan</button>
-                </div>
-                <div id="q-matching-container" class="hidden mb-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label
-                                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Pertanyaan
-                                (Kiri)</label>
-                            <div id="q-matching-questions" class="space-y-2">
-                                <div class="matching-q-row flex items-center gap-2">
-                                    <input type="text"
-                                        class="matching-question flex-1 p-3 bg-slate-50 rounded-xl text-sm border-none"
-                                        placeholder="Pertanyaan 1">
-                                    <button type="button" onclick="removeMatchingQRow(this)"
-                                        class="text-red-500">&times;</button>
-                                </div>
-                            </div>
-                            <button type="button" onclick="addMatchingQRow()" class="mt-2 text-sm text-sky-600">+ Tambah
-                                Pertanyaan</button>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Jawaban
-                                (Kanan)</label>
-                            <div id="q-matching-answers" class="space-y-2">
-                                <div class="matching-a-row flex items-center gap-2">
-                                    <input type="text"
-                                        class="matching-answer flex-1 p-3 bg-slate-50 rounded-xl text-sm border-none"
-                                        placeholder="Jawaban 1">
-                                    <button type="button" onclick="removeMatchingARow(this)"
-                                        class="text-red-500">&times;</button>
-                                </div>
-                            </div>
-                            <button type="button" onclick="addMatchingARow()" class="mt-2 text-sm text-sky-600">+ Tambah
-                                Jawaban</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="q-opsi-group" class="mb-8">
-                    <label id="q-opsi-label"
-                        class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Pilih Jawaban
-                        Benar (Opsi)</label>
-                    <div class="flex gap-2" id="q-correct-buttons-group">
-                        <button onclick="setActiveCorrect(0)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
-                            data-idx="0">A</button>
-                        <button onclick="setActiveCorrect(1)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
-                            data-idx="1">B</button>
-                        <button onclick="setActiveCorrect(2)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
-                            data-idx="2">C</button>
-                        <button onclick="setActiveCorrect(3)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
-                            data-idx="3">D</button>
-                    </div>
-                </div>
-
-                <button id="save-question-btn" onclick="window.isTeacherMode ? saveTeacherQuestion() : saveQuestion()"
-                    class="w-full py-4 bg-sky-600 text-white font-bold rounded-2xl">SIMPAN SOAL</button>
+                <button type="button" onclick="addTfRow()" class="mt-2 text-sm text-sky-600">+ Tambah
+                    Pernyataan</button>
             </div>
-        </div>
-
-        <!-- Student Instruction Modal -->
-        <div id="student-instruction-modal"
-            class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-fade-in">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-black text-slate-800">Petunjuk Ujian</h3>
-                    <button onclick="closeStudentInstructionModal()" class="text-slate-400 hover:text-slate-600"><i
-                            class="fas fa-times"></i></button>
-                </div>
-                <p class="text-sm text-slate-600 mb-4">Selamat datang!</p>
-                <p class="text-sm text-slate-600 mb-6">Di sini Anda akan menjumpai beberapa jenis soal. Perhatikan jenis
-                    soal di <strong>pojok kanan atas</strong>. </p>
-                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700 mb-4">
-                    <li><strong>Pilihan Ganda:</strong> pilih satu jawaban yang paling benar.</li>
-                    <li><strong>Pilihan Ganda Kompleks:</strong> pilih beberapa jawaban benar (jangan pilih semua opsi
-                        nanti skor 0).</li>
-                    <li><strong>Benar/Salah:</strong> tentukan setiap pernyataan apakah benar atau salah.</li>
-                    <li><strong>Menjodohkan:</strong> cocokan pertanyaan dengan jawaban menggunakan dropdown.</li>
-                    <li><strong>Uraian/Esai:</strong> ketik jawaban singkat sesuai pertanyaan.</li>
-                </ul>
-                <p class="text-sm text-slate-600 mb-6">Anda bisa berpindah soal dengan tombol <i
-                        class="fas fa-arrow-left"></i> dan <i class="fas fa-arrow-right"></i> atau langsung menekan
-                    nomor di panel bawah. Setiap pertanyaan yang belum terisi akan ditandai merah. Selamat mengerjakan.
-                    Lanjutkan dengan menekan tombol <strong>OK</strong>. </p>
-                <button onclick="closeStudentInstructionModal()"
-                    class="w-full py-3 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition-all">OK</button>
-            </div>
-        </div>
-
-        <!-- Image Zoom Modal -->
-        <div id="image-zoom-modal"
-            class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-4 z-50 backdrop-blur-sm"
-            onclick="if(event.target === this) closeImageZoom()">
-            <div class="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
-                <button onclick="closeImageZoom()"
-                    class="absolute top-4 right-4 text-white hover:text-slate-200 text-3xl z-10 transition-colors"><i
-                        class="fas fa-times-circle"></i></button>
-                <div class="relative bg-white rounded-xl overflow-hidden shadow-2xl max-w-full max-h-full">
-                    <img id="zoom-image-display" src="" alt="Gambar diperbesar"
-                        class="max-w-full max-h-[80vh] object-contain w-auto h-auto">
-                    <div
-                        class="absolute bottom-3 left-3 bg-slate-900/80 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
-                        <span id="zoom-image-counter">1/1</span>
-                    </div>
-                    <div class="absolute bottom-3 right-3 flex gap-2">
-                        <button onclick="previousZoomImage()"
-                            class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg text-sm transition-all shadow-lg"><i
-                                class="fas fa-chevron-left"></i></button>
-                        <button onclick="nextZoomImage()"
-                            class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg text-sm transition-all shadow-lg"><i
-                                class="fas fa-chevron-right"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Teacher Area -->
-        <div id="teacher-dashboard" class="hidden min-h-screen bg-slate-50">
-            <nav
-                class="bg-white px-8 py-4 border-b border-slate-50 flex justify-between items-center sticky top-0 z-20">
-                <div class="flex items-center gap-4">
-                    <img src="logo.png" class="w-10 h-10 object-contain">
+            <div id="q-matching-container" class="hidden mb-6">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <h2 class="text-sm font-black text-amber-600">SMP KRISTEN DORKAS - GURU</h2>
-                        <p id="teacher-info-label"
-                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"></p>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Pertanyaan
+                            (Kiri)</label>
+                        <div id="q-matching-questions" class="space-y-2">
+                            <div class="matching-q-row flex items-center gap-2">
+                                <input type="text"
+                                    class="matching-question flex-1 p-3 bg-slate-50 rounded-xl text-sm border-none"
+                                    placeholder="Pertanyaan 1">
+                                <button type="button" onclick="removeMatchingQRow(this)"
+                                    class="text-red-500">&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addMatchingQRow()" class="mt-2 text-sm text-sky-600">+ Tambah
+                            Pertanyaan</button>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Jawaban
+                            (Kanan)</label>
+                        <div id="q-matching-answers" class="space-y-2">
+                            <div class="matching-a-row flex items-center gap-2">
+                                <input type="text"
+                                    class="matching-answer flex-1 p-3 bg-slate-50 rounded-xl text-sm border-none"
+                                    placeholder="Jawaban 1">
+                                <button type="button" onclick="removeMatchingARow(this)"
+                                    class="text-red-500">&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addMatchingARow()" class="mt-2 text-sm text-sky-600">+ Tambah
+                            Jawaban</button>
                     </div>
                 </div>
-                <button onclick="logout()"
-                    class="px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-xs hover:bg-red-600 hover:text-white transition-all">LOGOUT</button>
-            </nav>
-            <main class="p-8">
-                <div class="max-w-6xl mx-auto">
-                    <!-- Tab Navigation -->
-                    <div class="flex gap-2 mb-8 border-b border-slate-200">
-                        <button onclick="switchTeacherTab('bank-soal')" id="tab-bank-soal"
-                            class="px-6 py-3 font-bold text-slate-700 border-b-2 border-amber-600 transition-all">
-                            <i class="fas fa-book mr-2"></i>Bank Soal
-                        </button>
-                        <button onclick="switchTeacherTab('hasil-ujian')" id="tab-hasil-ujian"
-                            class="px-6 py-3 font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-700 transition-all">
-                            <i class="fas fa-check-circle mr-2"></i>Hasil Ujian
-                        </button>
-                    </div>
-
-                    <!-- Bank Soal Tab -->
-                    <div id="teacher-tab-bank-soal" class="block">
-                        <div class="flex flex-col lg:flex-row justify-between gap-4 mb-8">
-                            <div>
-                                <h1 class="text-3xl font-black text-slate-800 mb-2">Bank Soal - Mata Pelajaran Saya</h1>
-                                <p class="text-slate-400">Kelola dan lihat soal untuk mata pelajaran yang Anda ajar.</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="openTeacherImportModal()"
-                                    class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-emerald-700 flex items-center gap-2"><i
-                                        class="fas fa-file-import"></i> Import Word</button>
-                                <button onclick="openTeacherQuestionModal()"
-                                    class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700">+
-                                    Soal Baru</button>
-                                <button onclick="openTeacherAiModal()"
-                                    class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
-                                        class="fas fa-robot"></i> Buat Soal AI</button>
-                                <button onclick="deleteTeacherFilteredQuestions()"
-                                    class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 flex items-center gap-2"><i
-                                        class="fas fa-trash-alt"></i> Hapus Soal</button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
-                            <div class="lg:col-span-1 space-y-4">
-                                <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
-                                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-                                        Filter Tampilan</h4>
-                                    <div class="space-y-3">
-                                        <div class="relative">
-                                            <input type="text" id="teacher-search-questions"
-                                                onkeyup="renderTeacherQuestions()" placeholder="Cari soal..."
-                                                class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-amber-500 pr-10">
-                                            <button
-                                                onclick="document.getElementById('teacher-search-questions').value=''; renderTeacherQuestions();"
-                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                                title="Clear search">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                        <select id="teacher-filter-mapel" onchange="renderTeacherQuestions()"
-                                            class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100"></select>
-                                        <select id="teacher-filter-rombel" onchange="renderTeacherQuestions()"
-                                            class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100">
-                                            <option value="">Semua Rombel</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="lg:col-span-5">
-                                <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-left text-sm">
-                                            <thead
-                                                class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                <tr>
-                                                    <th class="px-6 py-4 w-20 text-center">Urutan</th>
-                                                    <th class="px-6 py-4">Isi Soal</th>
-                                                    <th class="px-6 py-4 w-32">Kategori</th>
-                                                    <th class="px-6 py-4 w-28">Kunci</th>
-                                                    <th class="px-6 py-4 w-40">Jenis Soal</th>
-                                                    <th class="px-6 py-4 text-center w-28">Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="teacher-questions-table-body" class="divide-y divide-slate-50">
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Hasil Ujian Tab -->
-                    <div id="teacher-tab-hasil-ujian" class="hidden">
-                        <div class="flex flex-col lg:flex-row justify-between gap-4 mb-8">
-                            <div>
-                                <h1 class="text-3xl font-black text-slate-800 mb-2">Hasil Ujian Siswa</h1>
-                                <p class="text-slate-400">Lihat hasil ujian siswa untuk mata pelajaran yang Anda ajar.
-                                </p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="exportTeacherResultsToExcel()"
-                                    class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-2"><i
-                                        class="fas fa-download"></i> Export Excel</button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                            <div class="lg:col-span-1 space-y-4">
-                                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-                                        Filter Hasil</h4>
-                                    <div class="space-y-3">
-                                        <select id="teacher-results-filter-mapel" onchange="renderTeacherResults()"
-                                            class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100"></select>
-                                        <select id="teacher-results-filter-rombel" onchange="renderTeacherResults()"
-                                            class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100">
-                                            <option value="">Semua Rombel</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="lg:col-span-3">
-                                <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-left text-sm">
-                                            <thead
-                                                class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                <tr>
-                                                    <th class="px-6 py-4">Nama Siswa</th>
-                                                    <th class="px-6 py-4">Rombel</th>
-                                                    <th class="px-6 py-4">Mata Pelajaran</th>
-                                                    <th class="px-6 py-4">Tanggal</th>
-                                                    <th class="px-6 py-4 text-center">Nilai</th>
-                                                    <th class="px-6 py-4 text-center">Aksi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="teacher-results-table-body" class="divide-y divide-slate-50">
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+            <div id="q-opsi-group" class="mb-8">
+                <label id="q-opsi-label"
+                    class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 block">Pilih Jawaban
+                    Benar (Opsi)</label>
+                <div class="flex gap-2" id="q-correct-buttons-group">
+                    <button onclick="setActiveCorrect(0)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
+                        data-idx="0">A</button>
+                    <button onclick="setActiveCorrect(1)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
+                        data-idx="1">B</button>
+                    <button onclick="setActiveCorrect(2)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
+                        data-idx="2">C</button>
+                    <button onclick="setActiveCorrect(3)" class="c-btn flex-1 py-3 border-2 rounded-xl font-bold"
+                        data-idx="3">D</button>
                 </div>
-            </main>
+            </div>
+
+            <button id="save-question-btn" onclick="window.isTeacherMode ? saveTeacherQuestion() : saveQuestion()"
+                class="w-full py-4 bg-sky-600 text-white font-bold rounded-2xl">SIMPAN SOAL</button>
         </div>
+    </div>
 
-        <div id="student-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl animate-fade-in">
-                <h3 class="text-xl font-black mb-6">Siswa Baru</h3>
-                <input type="text" id="st-name" class="w-full px-5 py-3 bg-slate-50 rounded-2xl mb-3 outline-none"
-                    placeholder="Nama Lengkap">
-                <select id="st-rombel" class="w-full p-3 bg-slate-50 rounded-2xl mb-6 outline-none text-sm"></select>
-                <button onclick="saveStudent()"
-                    class="w-full py-4 bg-sky-600 text-white font-bold rounded-2xl">DAFTAR</button>
+    <!-- Student Instruction Modal -->
+    <div id="student-instruction-modal"
+        class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-black text-slate-800">Petunjuk Ujian</h3>
+                <button onclick="closeStudentInstructionModal()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">Selamat datang!</p>
+            <p class="text-sm text-slate-600 mb-6">Di sini Anda akan menjumpai beberapa jenis soal. Perhatikan jenis
+                soal di <strong>pojok kanan atas</strong>. </p>
+            <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700 mb-4">
+                <li><strong>Pilihan Ganda:</strong> pilih satu jawaban yang paling benar.</li>
+                <li><strong>Pilihan Ganda Kompleks:</strong> pilih beberapa jawaban benar (jangan pilih semua opsi
+                    nanti skor 0).</li>
+                <li><strong>Benar/Salah:</strong> tentukan setiap pernyataan apakah benar atau salah.</li>
+                <li><strong>Menjodohkan:</strong> cocokan pertanyaan dengan jawaban menggunakan dropdown.</li>
+                <li><strong>Uraian/Esai:</strong> ketik jawaban singkat sesuai pertanyaan.</li>
+            </ul>
+            <p class="text-sm text-slate-600 mb-6">Anda bisa berpindah soal dengan tombol <i
+                    class="fas fa-arrow-left"></i> dan <i class="fas fa-arrow-right"></i> atau langsung menekan
+                nomor di panel bawah. Setiap pertanyaan yang belum terisi akan ditandai merah. Selamat mengerjakan.
+                Lanjutkan dengan menekan tombol <strong>OK</strong>. </p>
+            <button onclick="closeStudentInstructionModal()"
+                class="w-full py-3 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition-all">OK</button>
+        </div>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div id="image-zoom-modal"
+        class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+        onclick="if(event.target === this) closeImageZoom()">
+        <div class="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <button onclick="closeImageZoom()"
+                class="absolute top-4 right-4 text-white hover:text-slate-200 text-3xl z-10 transition-colors"><i
+                    class="fas fa-times-circle"></i></button>
+            <div class="relative bg-white rounded-xl overflow-hidden shadow-2xl max-w-full max-h-full">
+                <img id="zoom-image-display" src="" alt="Gambar diperbesar"
+                    class="max-w-full max-h-[80vh] object-contain w-auto h-auto">
+                <div
+                    class="absolute bottom-3 left-3 bg-slate-900/80 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                    <span id="zoom-image-counter">1/1</span>
+                </div>
+                <div class="absolute bottom-3 right-3 flex gap-2">
+                    <button onclick="previousZoomImage()"
+                        class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg text-sm transition-all shadow-lg"><i
+                            class="fas fa-chevron-left"></i></button>
+                    <button onclick="nextZoomImage()"
+                        class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg text-sm transition-all shadow-lg"><i
+                            class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- AI Modal -->
-        <div id="ai-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-[60] backdrop-blur-sm">
-            <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-fade-in">
-                <div class="flex justify-between items-center mb-6">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <h3 class="text-xl font-black">Buat Soal AI</h3>
-                    </div>
-                    <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
-                            class="fas fa-times"></i></button>
+    <!-- Teacher Area -->
+    <div id="teacher-dashboard" class="hidden min-h-screen bg-slate-50">
+        <nav class="bg-white px-8 py-4 border-b border-slate-50 flex justify-between items-center sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <img src="logo.png" class="w-10 h-10 object-contain">
+                <div>
+                    <h2 class="text-sm font-black text-amber-600">SMP KRISTEN DORKAS - GURU</h2>
+                    <p id="teacher-info-label" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    </p>
                 </div>
-
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Materi
-                            / Topik Utama</label>
-                        <input type="text" id="ai-materi"
-                            class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold"
-                            placeholder="Contoh: Ekosistem Laut, Aljabar, dll">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jumlah
-                                Soal</label>
-                            <input type="number" id="ai-jumlah" value="5" min="1" max="20"
-                                class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold">
-                        </div>
-                        <div>
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tipe
-                                Soal</label>
-                            <select id="ai-type"
-                                class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold">
-                                <option value="single">Pilihan Ganda</option>
-                                <option value="multiple">Pilihan Ganda Kompleks</option>
-                                <option value="tf">Benar / Salah</option>
-                                <option value="text">Uraian / Esai</option>
-                                <option value="matching">Menjodohkan</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3" id="ai-target-selectors">
-                        <div>
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mapel</label>
-                            <select id="ai-mapel"
-                                class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold"></select>
-                        </div>
-                        <div>
-                            <label
-                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Rombel</label>
-                            <select id="ai-rombel"
-                                class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold"></select>
-                        </div>
-                    </div>
-
-                    <div
-                        class="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-[11px] text-rose-800 leading-relaxed">
-                        <i class="fas fa-info-circle mr-1"></i> AI akan mencoba membuat soal yang menantang namun tetap
-                        sesuai dengan kurikulum SMP. Hasil soal dapat diedit kembali setelah dibuat.
-                    </div>
-
-                    <button onclick="generateQuestionsWithAi()" id="ai-generate-btn"
-                        class="w-full py-4 bg-rose-600 text-white font-bold rounded-2xl hover:bg-rose-700 shadow-xl shadow-rose-100 transition-all flex items-center justify-center gap-3">
-                        <i class="fas fa-magic"></i> GENERATE SOAL
+            </div>
+            <button onclick="logout()"
+                class="px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-xs hover:bg-red-600 hover:text-white transition-all">LOGOUT</button>
+        </nav>
+        <main class="p-8">
+            <div class="max-w-6xl mx-auto">
+                <!-- Tab Navigation -->
+                <div class="flex gap-2 mb-8 border-b border-slate-200">
+                    <button onclick="switchTeacherTab('bank-soal')" id="tab-bank-soal"
+                        class="px-6 py-3 font-bold text-slate-700 border-b-2 border-amber-600 transition-all">
+                        <i class="fas fa-book mr-2"></i>Bank Soal
+                    </button>
+                    <button onclick="switchTeacherTab('hasil-ujian')" id="tab-hasil-ujian"
+                        class="px-6 py-3 font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-700 transition-all">
+                        <i class="fas fa-check-circle mr-2"></i>Hasil Ujian
                     </button>
                 </div>
+
+                <!-- Bank Soal Tab -->
+                <div id="teacher-tab-bank-soal" class="block">
+                    <div class="flex flex-col lg:flex-row justify-between gap-4 mb-8">
+                        <div>
+                            <h1 class="text-3xl font-black text-slate-800 mb-2">Bank Soal - Mata Pelajaran Saya</h1>
+                            <p class="text-slate-400">Kelola dan lihat soal untuk mata pelajaran yang Anda ajar.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openTeacherImportModal()"
+                                class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-emerald-700 flex items-center gap-2"><i
+                                    class="fas fa-file-import"></i> Import Word</button>
+                            <button onclick="openTeacherQuestionModal()"
+                                class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700">+
+                                Soal Baru</button>
+                            <button onclick="openTeacherAiModal()"
+                                class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
+                                    class="fas fa-robot"></i> Buat Soal AI</button>
+                            <button onclick="deleteTeacherFilteredQuestions()"
+                                class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 flex items-center gap-2"><i
+                                    class="fas fa-trash-alt"></i> Hapus Soal Terfilter</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
+                        <div class="lg:col-span-1 space-y-4">
+                            <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                                    Filter Tampilan</h4>
+                                <div class="space-y-3">
+                                    <div class="relative">
+                                        <input type="text" id="teacher-search-questions"
+                                            onkeyup="renderTeacherQuestions()" placeholder="Cari soal..."
+                                            class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-amber-500 pr-10">
+                                        <button
+                                            onclick="document.getElementById('teacher-search-questions').value=''; renderTeacherQuestions();"
+                                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                            title="Clear search">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <select id="teacher-filter-mapel" onchange="renderTeacherQuestions()"
+                                        class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100"></select>
+                                    <select id="teacher-filter-rombel" onchange="renderTeacherQuestions()"
+                                        class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100">
+                                        <option value="">Semua Rombel</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-5">
+                            <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead
+                                            class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            <tr>
+                                                <th class="px-6 py-4 w-20 text-center">Urutan</th>
+                                                <th class="px-6 py-4">Isi Soal</th>
+                                                <th class="px-6 py-4 w-32">Kategori</th>
+                                                <th class="px-6 py-4 w-28">Kunci</th>
+                                                <th class="px-6 py-4 w-40">Jenis Soal</th>
+                                                <th class="px-6 py-4 text-center w-28">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="teacher-questions-table-body" class="divide-y divide-slate-50">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hasil Ujian Tab -->
+                <div id="teacher-tab-hasil-ujian" class="hidden">
+                    <div class="flex flex-col lg:flex-row justify-between gap-4 mb-8">
+                        <div>
+                            <h1 class="text-3xl font-black text-slate-800 mb-2">Hasil Ujian Siswa</h1>
+                            <p class="text-slate-400">Lihat hasil ujian siswa untuk mata pelajaran yang Anda ajar.
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="exportTeacherResultsToExcel()"
+                                class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-2"><i
+                                    class="fas fa-download"></i> Export Excel</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div class="lg:col-span-1 space-y-4">
+                            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                                    Filter Hasil</h4>
+                                <div class="space-y-3">
+                                    <select id="teacher-results-filter-mapel" onchange="renderTeacherResults()"
+                                        class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100"></select>
+                                    <select id="teacher-results-filter-rombel" onchange="renderTeacherResults()"
+                                        class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold outline-none ring-1 ring-slate-100">
+                                        <option value="">Semua Rombel</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-3">
+                            <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead
+                                            class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            <tr>
+                                                <th class="px-6 py-4">Nama Siswa</th>
+                                                <th class="px-6 py-4">Rombel</th>
+                                                <th class="px-6 py-4">Mata Pelajaran</th>
+                                                <th class="px-6 py-4">Tanggal</th>
+                                                <th class="px-6 py-4 text-center">Nilai</th>
+                                                <th class="px-6 py-4 text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="teacher-results-table-body" class="divide-y divide-slate-50">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="student-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl animate-fade-in">
+            <h3 class="text-xl font-black mb-6">Siswa Baru</h3>
+            <input type="text" id="st-name" class="w-full px-5 py-3 bg-slate-50 rounded-2xl mb-3 outline-none"
+                placeholder="Nama Lengkap">
+            <select id="st-rombel" class="w-full p-3 bg-slate-50 rounded-2xl mb-6 outline-none text-sm"></select>
+            <button onclick="saveStudent()"
+                class="w-full py-4 bg-sky-600 text-white font-bold rounded-2xl">DAFTAR</button>
+        </div>
+    </div>
+
+    <!-- AI Modal -->
+    <div id="ai-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-[60] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="text-xl font-black">Buat Soal AI</h3>
+                </div>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Materi
+                        / Topik Utama</label>
+                    <input type="text" id="ai-materi"
+                        class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold"
+                        placeholder="Contoh: Ekosistem Laut, Aljabar, dll">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jumlah
+                            Soal</label>
+                        <input type="number" id="ai-jumlah" value="5" min="1" max="20"
+                            class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Tipe
+                            Soal</label>
+                        <select id="ai-type"
+                            class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold">
+                            <option value="single">Pilihan Ganda</option>
+                            <option value="multiple">Pilihan Ganda Kompleks</option>
+                            <option value="tf">Benar / Salah</option>
+                            <option value="text">Uraian / Esai</option>
+                            <option value="matching">Menjodohkan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3" id="ai-target-selectors">
+                    <div>
+                        <label
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mapel</label>
+                        <select id="ai-mapel"
+                            class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold"></select>
+                    </div>
+                    <div>
+                        <label
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Rombel</label>
+                        <select id="ai-rombel"
+                            class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-rose-500 font-bold"></select>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-rose-50 border border-rose-100 rounded-2xl p-4 text-[11px] text-rose-800 leading-relaxed">
+                    <i class="fas fa-info-circle mr-1"></i> AI akan mencoba membuat soal yang menantang namun tetap
+                    sesuai dengan kurikulum SMP. Hasil soal dapat diedit kembali setelah dibuat.
+                </div>
+
+                <button onclick="generateQuestionsWithAi()" id="ai-generate-btn"
+                    class="w-full py-4 bg-rose-600 text-white font-bold rounded-2xl hover:bg-rose-700 shadow-xl shadow-rose-100 transition-all flex items-center justify-center gap-3">
+                    <i class="fas fa-magic"></i> GENERATE SOAL
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- AI Loading Overlay -->
-        <div id="ai-loading"
-            class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-[70] backdrop-blur-md">
+    <!-- AI Loading Overlay -->
+    <div id="ai-loading"
+        class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-[70] backdrop-blur-md">
+        <div class="text-center">
+            <div class="relative w-24 h-24 mx-auto mb-6">
+                <div class="absolute inset-0 border-4 border-rose-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-rose-500 rounded-full border-t-transparent animate-spin">
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center text-white">
+                    <i class="fas fa-robot text-3xl animate-pulse"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-black text-white mb-2">AI sedang berpikir...</h3>
+            <p class="text-rose-200 text-sm animate-pulse italic">Mohon tunggu, sedang merangkai pertanyaan terbaik
+                untuk Anda.</p>
+        </div>
+    </div>
+
+    <div id="schedule-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black">Jadwal Akses Ujian (Rombel × Mapel)</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <p class="text-slate-400 text-sm mb-6">Pilih kombinasi Rombel dan Mata Pelajaran yang dapat diakses
+                peserta.</p>
+            <div id="schedule-checklist" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 mb-6"></div>
+            <button onclick="saveSchedules()"
+                class="w-full py-4 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 transition-all">SIMPAN
+                JADWAL</button>
+        </div>
+    </div>
+
+    <!-- Time Limit Modal -->
+    <div id="time-limit-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black">Atur Waktu Pengerjaan (Rombel × Mapel)</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <p class="text-slate-400 text-sm mb-6">Atur waktu pengerjaan ujian dalam menit untuk setiap kombinasi
+                Rombel dan Mata Pelajaran.</p>
+            <div id="time-limit-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 mb-6"></div>
+            <button onclick="saveTimeLimits()"
+                class="w-full py-4 bg-orange-600 text-white font-bold rounded-2xl hover:bg-orange-700 transition-all">SIMPAN
+                WAKTU</button>
+        </div>
+    </div>
+
+    <!-- Cheat Warning Modal -->
+    <div id="cheat-warning-modal"
+        class="fixed inset-0 bg-red-900/95 hidden items-center justify-center p-4 z-[100] backdrop-blur-md">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl animate-bounce">
             <div class="text-center">
-                <div class="relative w-24 h-24 mx-auto mb-6">
-                    <div class="absolute inset-0 border-4 border-rose-500/20 rounded-full"></div>
-                    <div
-                        class="absolute inset-0 border-4 border-rose-500 rounded-full border-t-transparent animate-spin">
-                    </div>
-                    <div class="absolute inset-0 flex items-center justify-center text-white">
-                        <i class="fas fa-robot text-3xl animate-pulse"></i>
-                    </div>
+                <div
+                    class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-exclamation-triangle text-4xl"></i>
                 </div>
-                <h3 class="text-xl font-black text-white mb-2">AI sedang berpikir...</h3>
-                <p class="text-rose-200 text-sm animate-pulse italic">Mohon tunggu, sedang merangkai pertanyaan terbaik
-                    untuk Anda.</p>
+                <h3 class="text-2xl font-black text-slate-800 mb-2">PERINGATAN KERAS!</h3>
+                <p class="text-slate-600 mb-8 leading-relaxed">Terdeteksi upaya keluar dari halaman ujian.
+                    <br><br><strong>Peringatan 1/1:</strong> Jika Anda keluar sekali lagi, ujian akan otomatis
+                    <strong>diberhentikan dan nilai dikirim</strong> apa adanya.</p>
+                <button onclick="closeCheatWarning()"
+                    class="w-full py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-200 transition-all uppercase tracking-widest">SAYA
+                    MENGERTI</button>
             </div>
         </div>
+    </div>
 
-        <div id="schedule-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div
-                class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-black">Jadwal Akses Ujian (Rombel × Mapel)</h3>
-                    <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
-                            class="fas fa-times"></i></button>
-                </div>
-                <p class="text-slate-400 text-sm mb-6">Pilih kombinasi Rombel dan Mata Pelajaran yang dapat diakses
-                    peserta.</p>
-                <div id="schedule-checklist" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 mb-6"></div>
-                <button onclick="saveSchedules()"
-                    class="w-full py-4 bg-purple-600 text-white font-bold rounded-2xl hover:bg-purple-700 transition-all">SIMPAN
-                    JADWAL</button>
-            </div>
+    <!-- Anti-Cheat Content Mask (visible when tab inactive) -->
+    <div id="cheat-mask"
+        class="fixed inset-0 bg-slate-900 z-[99] hidden items-center justify-center pointer-events-none">
+        <div class="text-center text-white p-8">
+            <i class="fas fa-eye-slash text-6xl mb-4 text-slate-500"></i>
+            <h3 class="text-xl font-bold">KONTEN DISEMBUNYIKAN</h3>
+            <p class="text-slate-400 text-sm">Kembali ke tab ujian untuk melanjutkan.</p>
         </div>
-
-        <!-- Time Limit Modal -->
-        <div id="time-limit-modal"
-            class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div
-                class="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-black">Atur Waktu Pengerjaan (Rombel × Mapel)</h3>
-                    <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
-                            class="fas fa-times"></i></button>
-                </div>
-                <p class="text-slate-400 text-sm mb-6">Atur waktu pengerjaan ujian dalam menit untuk setiap kombinasi
-                    Rombel dan Mata Pelajaran.</p>
-                <div id="time-limit-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 mb-6"></div>
-                <button onclick="saveTimeLimits()"
-                    class="w-full py-4 bg-orange-600 text-white font-bold rounded-2xl hover:bg-orange-700 transition-all">SIMPAN
-                    WAKTU</button>
-            </div>
-        </div>
-
-        <!-- Cheat Warning Modal -->
-        <div id="cheat-warning-modal"
-            class="fixed inset-0 bg-red-900/95 hidden items-center justify-center p-4 z-[100] backdrop-blur-md">
-            <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl animate-bounce">
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-exclamation-triangle text-4xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-black text-slate-800 mb-2">PERINGATAN KERAS!</h3>
-                    <p class="text-slate-600 mb-8 leading-relaxed">Terdeteksi upaya keluar dari halaman ujian. <br><br><strong>Peringatan 1/1:</strong> Jika Anda keluar sekali lagi, ujian akan otomatis <strong>diberhentikan dan nilai dikirim</strong> apa adanya.</p>
-                    <button onclick="closeCheatWarning()"
-                        class="w-full py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 shadow-xl shadow-red-200 transition-all uppercase tracking-widest">SAYA MENGERTI</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Anti-Cheat Content Mask (visible when tab inactive) -->
-        <div id="cheat-mask" class="fixed inset-0 bg-slate-900 z-[99] hidden items-center justify-center pointer-events-none">
-            <div class="text-center text-white p-8">
-                <i class="fas fa-eye-slash text-6xl mb-4 text-slate-500"></i>
-                <h3 class="text-xl font-bold">KONTEN DISEMBUNYIKAN</h3>
-                <p class="text-slate-400 text-sm">Kembali ke tab ujian untuk melanjutkan.</p>
-            </div>
-        </div>
+    </div>
     </div>
 
     <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
@@ -1525,7 +1522,7 @@
 
         function handleCheating(reason) {
             if (!isExamActive) return;
-            
+
             // Increment cheat count
             cheatingCount++;
             console.warn(`Anti-Cheat Triggered: ${reason} (Attempt: ${cheatingCount})`);
@@ -1539,10 +1536,10 @@
                 // First or Second Warning
                 const attemptsLeft = 3 - cheatingCount;
                 const warningMsg = attemptsLeft === 1 ? 'Peringatan Terakhir!' : `Peringatan ${cheatingCount}!`;
-                
+
                 document.getElementById('cheat-warning-modal').classList.remove('hidden');
                 document.getElementById('cheat-warning-modal').classList.add('flex');
-                
+
                 // (Optional) Update modal text if there's a specific element for it
                 const warningText = document.getElementById('cheat-warning-text');
                 if (warningText) {
@@ -2148,12 +2145,14 @@
                         ...db,
                         questions: (db.questions || []).map(q => {
                             if (!q.images || q.images.length === 0) return q;
-                            return { ...q, images: q.images.map(img => ({
-                                name: img.name || '',
-                                type: img.type || '',
-                                // Strip base64 data – images are kept in local IDB
-                                data: '[IMAGE_LOCAL_ONLY]'
-                            })) };
+                            return {
+                                ...q, images: q.images.map(img => ({
+                                    name: img.name || '',
+                                    type: img.type || '',
+                                    // Strip base64 data – images are kept in local IDB
+                                    data: '[IMAGE_LOCAL_ONLY]'
+                                }))
+                            };
                         })
                     };
                     const res = await fetch(getApiBaseUrl() + '/api/db', {
@@ -5820,11 +5819,11 @@
             };
             db.results.push(newEntry);
             updateCompletionCharts();
-            
+
             // Tampilkan UI Loading Antrian
             document.getElementById('confirm-finish-modal').classList.add('hidden');
             document.getElementById('exam-screen').classList.add('hidden');
-            
+
             const savingModal = document.getElementById('saving-modal');
             if (savingModal) {
                 savingModal.classList.remove('hidden');
