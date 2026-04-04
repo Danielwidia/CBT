@@ -3358,8 +3358,6 @@
                     remoteUrlInput.value = localStorage.getItem(REMOTE_SERVER_KEY) || '';
                 }
             }
-            // refresh hotspot status display whenever admin panel is shown
-            if (typeof fetchHotspotStatus === 'function') fetchHotspotStatus();
         }
 
         function renderRombelSection() {
@@ -4601,64 +4599,7 @@
             event.target.value = '';
         }
 
-        // --- VIRTUAL WIFI HOTSPOT FUNCTIONS ---
-        window.hotspotState = 'unknown';
 
-        function updateHotspotUI(state) {
-            const statusEl = document.getElementById('hotspot-status');
-            window.hotspotState = state || 'unknown';
-            if (statusEl) statusEl.innerText = 'Status: ' + window.hotspotState;
-        }
-
-        async function fetchHotspotStatus() {
-            try {
-                const res = await fetch(getApiBaseUrl() + '/api/hotspot/status');
-                if (res.ok) {
-                    const data = await res.json();
-                    updateHotspotUI(data.status || 'unknown');
-                } else {
-                    updateHotspotUI('error');
-                }
-            } catch (err) {
-                updateHotspotUI(err.message || 'error');
-            }
-        }
-
-        async function startHotspot() {
-            try {
-                const res = await fetch(getApiBaseUrl() + '/api/hotspot/start', { method: 'POST' });
-                if (res.ok) {
-                    alert('Hotspot sedang diaktifkan');
-                } else {
-                    // try parse JSON error message
-                    let msg = res.statusText;
-                    try {
-                        const data = await res.json();
-                        if (data && data.error) msg = data.error;
-                    } catch (e) {
-                        // fallback to text
-                        const txt = await res.text().catch(() => '');
-                        if (txt) msg = txt;
-                    }
-                    alert('Gagal mengaktifkan hotspot: ' + msg + ` (HTTP ${res.status})`);
-                }
-            } catch (err) {
-                alert('Error saat mengaktifkan hotspot: ' + err.message);
-            } finally {
-                fetchHotspotStatus();
-            }
-        }
-
-        async function stopHotspot() {
-            try {
-                const res = await fetch(getApiBaseUrl() + '/api/hotspot/stop', { method: 'POST' });
-                if (!res.ok) console.warn('stop error');
-            } catch (err) {
-                console.warn('Error saat menghentikan hotspot:', err);
-            } finally {
-                fetchHotspotStatus();
-            }
-        }
 
         // --- WORD IMPORT HANDLER ---
         async function handleWordFile(event) {
