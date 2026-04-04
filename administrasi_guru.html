@@ -28,21 +28,21 @@
         }
         
         .nav-button.active {
-            background: #fef3c7;
-            color: #d97706;
-            border-right: 4px solid #d97706;
+            background: #eff6ff;
+            color: #2563eb;
+            border-right: 4px solid #2563eb;
             font-weight: bold;
         }
 
         .ai-glow {
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
             animation: pulse-glow 2s infinite;
         }
 
         @keyframes pulse-glow {
-            0% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.8); }
-            100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+            0% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.8); }
+            100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
         }
 
         /* Loading Dots Animation */
@@ -50,7 +50,7 @@
             display: inline-block;
             width: 6px;
             height: 6px;
-            background-color: #f59e0b;
+            background-color: #3b82f6;
             border-radius: 50%;
             margin: 0 2px;
             animation: typing 1s infinite alternate;
@@ -84,12 +84,12 @@
     <!-- Sidebar Navigation -->
     <aside class="w-64 glass-panel border-r border-slate-200 flex flex-col z-20">
         <div class="h-20 flex items-center px-6 border-b border-slate-100 gap-3">
-            <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
+            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-inner">
                 <i class="fas fa-brain"></i>
             </div>
             <div>
                 <h1 class="font-black text-sm text-slate-800 leading-tight">E-Kinerja</h1>
-                <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest">AI Assistant</p>
+                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">AI Assistant</p>
             </div>
         </div>
 
@@ -156,7 +156,7 @@
                     
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mata Pelajaran</label>
-                        <input type="text" list="mapel-list" id="input-mapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
+                        <input type="text" list="mapel-list" id="input-mapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
                         <datalist id="mapel-list">
                             <option value="Pendidikan Agama">
                             <option value="Bahasa Indonesia">
@@ -175,7 +175,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Fase / Kelas</label>
-                            <select id="input-fase" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
+                            <select id="input-fase" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
                                 <option value="Fase D (Kelas 7)">Fase D (Kelas 7)</option>
                                 <option value="Fase D (Kelas 8)">Fase D (Kelas 8)</option>
                                 <option value="Fase D (Kelas 9)">Fase D (Kelas 9)</option>
@@ -183,7 +183,7 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Semester</label>
-                            <select id="input-semester" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
+                            <select id="input-semester" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
                                 <option value="Ganjil">Ganjil</option>
                                 <option value="Genap">Genap</option>
                             </select>
@@ -192,22 +192,22 @@
 
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Topik / Materi Pokok</label>
-                        <textarea id="input-topik" rows="3" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 text-sm" placeholder="Contoh: Teks Deskripsi, Bilangan Bulat, Ekosistem..."></textarea>
+                        <textarea id="input-topik" rows="3" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Contoh: Teks Deskripsi, Bilangan Bulat, Ekosistem..."></textarea>
                     </div>
 
                     <div id="extra-inputs-container">
                         <!-- Extra inputs dynamically loaded based on tab -->
                     </div>
 
-                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-                        <i class="fas fa-lightbulb text-amber-500 mt-1"></i>
-                        <p class="text-xs text-amber-800 leading-relaxed">AI akan merumuskan dokumen sesuai pedoman Kurikulum Merdeka SMP. Pastikan data input sudah akurat.</p>
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+                        <i class="fas fa-lightbulb text-blue-500 mt-1"></i>
+                        <p class="text-xs text-blue-800 leading-relaxed">AI akan merumuskan dokumen sesuai pedoman Kurikulum Merdeka SMP. Pastikan data input sudah akurat.</p>
                     </div>
 
                 </div>
 
                 <div class="p-6 bg-white border-t border-slate-100">
-                    <button id="btn-generate" onclick="generateWithAI()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 shadow-xl shadow-amber-200 transition-all flex items-center justify-center gap-2">
+                    <button id="btn-generate" onclick="generateWithAI()" class="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-cyan-600 shadow-xl shadow-blue-200 transition-all flex items-center justify-center gap-2">
                         <i class="fas fa-wand-magic-sparkles"></i> GENERATE DENGAN AI
                     </button>
                 </div>
@@ -228,8 +228,8 @@
                 <!-- Loading State -->
                 <div id="state-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm z-20 hidden">
                     <div class="w-20 h-20 mb-6 bg-white rounded-2xl shadow-2xl flex items-center justify-center ai-glow relative overflow-hidden">
-                        <i class="fas fa-robot text-4xl text-amber-500 z-10 relative bg-white"></i>
-                        <div class="absolute inset-x-0 bottom-0 bg-orange-100 h-1/2 animate-pulse"></div>
+                        <i class="fas fa-robot text-4xl text-blue-500 z-10 relative bg-white"></i>
+                        <div class="absolute inset-x-0 bottom-0 bg-cyan-100 h-1/2 animate-pulse"></div>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 mb-2">AI Sedang Menyusun Dokumen...</h3>
                     <div class="typing-indicator">
@@ -283,11 +283,11 @@
                 extraHtml: `
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 mt-4">Alokasi Waktu</label>
-                        <input type="text" id="input-waktu" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 text-sm" placeholder="Contoh: 2 x 40 Menit">
+                        <input type="text" id="input-waktu" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Contoh: 2 x 40 Menit">
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 mt-4">Model Pembelajaran</label>
-                        <select id="input-model" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
+                        <select id="input-model" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
                             <option>Problem Based Learning (PBL)</option>
                             <option>Project Based Learning (PjBL)</option>
                             <option>Discovery / Inquiry Learning</option>
@@ -302,7 +302,7 @@
                 extraHtml: `
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 mt-4">Pekan Efektif</label>
-                        <input type="number" id="input-pekan" value="18" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 text-sm" placeholder="Jumlah Pekan">
+                        <input type="number" id="input-pekan" value="18" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Jumlah Pekan">
                     </div>
                 `
             },
@@ -312,7 +312,7 @@
                 extraHtml: `
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 mt-4">Jumlah Soal / Jenis Ujian</label>
-                        <input type="text" id="input-jenis-ujian" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 text-sm" placeholder="Contoh: STS / SAS / 10 Soal PG">
+                        <input type="text" id="input-jenis-ujian" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Contoh: STS / SAS / 10 Soal PG">
                     </div>
                 `
             },
@@ -323,11 +323,11 @@
                     <div class="grid grid-cols-2 gap-3 mt-4">
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jumlah</label>
-                            <input type="number" id="input-jumlah-soal" value="5" max="20" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 text-sm">
+                            <input type="number" id="input-jumlah-soal" value="5" max="20" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm">
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Bentuk</label>
-                            <select id="input-bentuk-soal" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
+                            <select id="input-bentuk-soal" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
                                 <option>PG</option>
                                 <option>PG Kompleks</option>
                                 <option>Esai</option>
@@ -463,13 +463,24 @@
         function downloadWord() {
             const content = document.getElementById('editor-content').innerHTML;
             if(!content.trim()) return showToast('Tidak ada konten untuk didownload', true);
-            showToast('Mengunduh dokumen Word...');
+            showToast('Menyiapkan dokumen Word...');
             
-            // In a real app we'd use html-docx-js or send to backend
-            // For now, this is a placeholder
-            setTimeout(() => {
-                showToast('Fitur Ekspor Word Aktif di Backend!');
-            }, 1000);
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Dokumen Administrasi Guru</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + content + footer;
+            
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+            
+            // Nama file dinamis
+            const activeTitle = config[currentActiveTab].title.replace(/[^a-zA-Z0-9]/g, '_');
+            fileDownload.download = `E_Kinerja_${activeTitle}.doc`;
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+            
+            setTimeout(() => showToast('Dokumen Word berhasil diunduh!'), 500);
         }
 
         function showToast(msg, isError = false) {
@@ -478,7 +489,7 @@
             document.getElementById('toast-message').innerText = msg;
             
             if(isError) {
-                icon.className = "fas fa-exclamation-triangle text-amber-400";
+                icon.className = "fas fa-exclamation-triangle text-blue-400";
             } else {
                 icon.className = "fas fa-check-circle text-emerald-400";
             }
