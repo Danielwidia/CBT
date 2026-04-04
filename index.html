@@ -435,6 +435,9 @@
                             <button onclick="openAiModal()"
                                 class="px-4 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 hover:shadow-lg hover:shadow-rose-200 flex items-center gap-2"><i
                                     class="fas fa-robot"></i> Buat Soal AI</button>
+                            <button onclick="openKisiKisiModal()"
+                                class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 flex items-center gap-2"><i
+                                    class="fas fa-magic"></i> Kisi-kisi AI</button>
                             <button onclick="deleteFilteredQuestions()"
                                 class="px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 flex items-center gap-2"><i
                                     class="fas fa-trash-alt"></i> Hapus Soal Terfilter</button>
@@ -1247,6 +1250,9 @@
                             <button onclick="openTeacherAiModal()"
                                 class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
                                     class="fas fa-robot"></i> Buat Soal AI</button>
+                            <button onclick="openKisiKisiModal()"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-indigo-700 flex items-center gap-2"><i
+                                    class="fas fa-magic"></i> Kisi-kisi AI</button>
                             <button onclick="deleteTeacherFilteredQuestions()"
                                 class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 flex items-center gap-2"><i
                                     class="fas fa-trash-alt"></i> Hapus Soal Terfilter</button>
@@ -1496,6 +1502,77 @@
             <button onclick="saveTimeLimits()"
                 class="w-full py-4 bg-orange-600 text-white font-bold rounded-2xl hover:bg-orange-700 transition-all">SIMPAN
                 WAKTU</button>
+        </div>
+    </div>
+
+    <!-- Kisi-kisi Modal -->
+    <div id="kisi-kisi-modal"
+        class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-[60] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-5xl w-full p-8 shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h3 class="text-xl font-black">Buat Kisi-kisi dengan AI</h3>
+                </div>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+
+            <div id="kisi-kisi-setup" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mata Pelajaran</label>
+                        <select id="kk-mapel" class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 font-bold"></select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Rombel / Kelas</label>
+                        <select id="kk-rombel" class="w-full px-5 py-3 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-indigo-500 font-bold"></select>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-[11px] text-indigo-800 leading-relaxed">
+                    <i class="fas fa-info-circle mr-1"></i> AI akan membaca soal yang ada di Bank Soal untuk Mapel dan Rombel yang dipilih, kemudian menyusun Kisi-kisi instrumen secara otomatis.
+                </div>
+                <button onclick="generateKisiKisiWithAi()" id="kk-generate-btn"
+                    class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-3">
+                    <i class="fas fa-wand-magic-sparkles"></i> MULAI ANALISIS AI
+                </button>
+            </div>
+
+            <div id="kisi-kisi-result" class="hidden flex flex-col flex-1 overflow-hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-xs text-slate-500">Hasil analisis AI berdasarkan <span id="kk-count" class="font-bold">0</span> soal.</p>
+                    <div class="flex gap-2">
+                        <button onclick="downloadKisiKisiExcel()" class="px-3 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
+                            <i class="fas fa-file-excel"></i> EXCEL
+                        </button>
+                        <button onclick="downloadKisiKisiWord()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
+                            <i class="fas fa-file-word"></i> WORD
+                        </button>
+                        <button onclick="downloadKisiKisiPdf()" class="px-3 py-2 bg-rose-600 text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto border border-slate-100 rounded-2xl custom-scrollbar">
+                    <table id="kk-table" class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-900 text-white sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 border border-slate-700 text-center w-10">No</th>
+                                <th class="px-4 py-3 border border-slate-700">Kompetensi Dasar</th>
+                                <th class="px-4 py-3 border border-slate-700">Materi</th>
+                                <th class="px-4 py-3 border border-slate-700">Indikator Soal</th>
+                                <th class="px-4 py-3 border border-slate-700 text-center w-16">Level</th>
+                                <th class="px-4 py-3 border border-slate-700 text-center w-16">No Soal</th>
+                                <th class="px-4 py-3 border border-slate-700 text-center w-20">Bentuk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kk-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+                <button onclick="resetKisiKisiModal()" class="mt-4 text-xs font-bold text-slate-400 hover:text-slate-600 self-center">RESET / KEMBALI</button>
+            </div>
         </div>
     </div>
 
@@ -6254,6 +6331,199 @@
                     loading.classList.remove('flex');
                 }
             }
+        }
+
+        // --- KISI-KISI AI FUNCTIONALITY ---
+        let currentKisiKisiData = [];
+
+        function openKisiKisiModal() {
+            const modal = document.getElementById('kisi-kisi-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const mapelSel = document.getElementById('kk-mapel');
+            const rombelSel = document.getElementById('kk-rombel');
+
+            // Reset UI
+            document.getElementById('kisi-kisi-setup').classList.remove('hidden');
+            document.getElementById('kisi-kisi-result').classList.add('hidden');
+
+            // Populate based on current mode (Admin or Teacher)
+            if (window.currentSiswa && window.currentSiswa.role === 'teacher') {
+                const subjects = window.currentSiswa.subjects || [];
+                const uniqueMapels = [...new Set(subjects.map(s => s.mapel))];
+                mapelSel.innerHTML = uniqueMapels.map(m => `<option value="${m}">${m}</option>`).join('');
+
+                const updateRombel = () => {
+                    const selectedMapel = mapelSel.value;
+                    const relevantRombels = subjects.filter(s => s.mapel === selectedMapel).map(s => s.rombel);
+                    rombelSel.innerHTML = relevantRombels.map(r => `<option value="${r}">${r}</option>`).join('');
+                };
+                mapelSel.onchange = updateRombel;
+                updateRombel();
+            } else {
+                // Admin mode
+                mapelSel.innerHTML = db.subjects.map(s => {
+                    const name = (typeof s === 'object') ? s.name : s;
+                    return `<option value="${name}">${name}</option>`;
+                }).join('');
+                rombelSel.innerHTML = db.rombels.map(r => `<option value="${r}">${r}</option>`).join('');
+                mapelSel.onchange = null;
+            }
+        }
+
+        async function generateKisiKisiWithAi() {
+            const mapel = document.getElementById('kk-mapel').value;
+            const rombel = document.getElementById('kk-rombel').value;
+
+            // Filter questions to send
+            const questions = db.questions.filter(q => q.mapel === mapel && q.rombel === rombel);
+            if (questions.length === 0) {
+                alert('Tidak ada soal yang ditemukan untuk Mapel and Rombel ini!');
+                return;
+            }
+
+            const loading = document.getElementById('ai-loading');
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+
+            try {
+                const response = await fetch(getApiBaseUrl() + '/api/generate-kisi-kisi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ questions, mapel, rombel })
+                });
+
+                const result = await response.json();
+                if (result.ok) {
+                    currentKisiKisiData = result.kisiKisi;
+                    renderKisiKisiTable(currentKisiKisiData);
+                    document.getElementById('kisi-kisi-setup').classList.add('hidden');
+                    document.getElementById('kisi-kisi-result').classList.remove('hidden');
+                    document.getElementById('kk-count').innerText = questions.length;
+                } else {
+                    alert('Error AI: ' + (result.error || 'Gagal generate kisi-kisi'));
+                }
+            } catch (err) {
+                console.error('Kisi-kisi Generation Error:', err);
+                alert('Terjadi kesalahan saat memanggil AI: ' + err.message);
+            } finally {
+                loading.classList.add('hidden');
+                loading.classList.remove('flex');
+            }
+        }
+
+        function renderKisiKisiTable(data) {
+            const tbody = document.getElementById('kk-table-body');
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${item.no}</td>
+                    <td class="px-4 py-3 border border-slate-200 font-medium">${item.kd}</td>
+                    <td class="px-4 py-3 border border-slate-200">${item.materi}</td>
+                    <td class="px-4 py-3 border border-slate-200 italic">${item.indikator}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${item.level}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center font-bold">${item.no_soal}</td>
+                    <td class="px-4 py-3 border border-slate-200 text-center">${item.bentuk}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetKisiKisiModal() {
+            document.getElementById('kisi-kisi-setup').classList.remove('hidden');
+            document.getElementById('kisi-kisi-result').classList.add('hidden');
+        }
+
+        function downloadKisiKisiExcel() {
+            if (!currentKisiKisiData.length) return;
+            const ws = XLSX.utils.json_to_sheet(currentKisiKisiData.map(item => ({
+                'No': item.no,
+                'Kompetensi Dasar': item.kd,
+                'Materi': item.materi,
+                'Indikator Soal': item.indikator,
+                'Level': item.level,
+                'No Soal': item.no_soal,
+                'Bentuk': item.bentuk
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Kisi-kisi");
+            XLSX.writeFile(wb, `Kisi-kisi_${document.getElementById('kk-mapel').value}_${document.getElementById('kk-rombel').value}.xlsx`);
+        }
+
+        function downloadKisiKisiWord() {
+            if (!currentKisiKisiData.length) return;
+            const mapel = document.getElementById('kk-mapel').value;
+            const rombel = document.getElementById('kk-rombel').value;
+            
+            let html = `
+                <div style="font-family: 'Arial', sans-serif;">
+                    <h2 style="text-align: center; text-transform: uppercase;">KISI-KISI INSTRUMEN UJIAN</h2>
+                    <table style="margin-bottom: 20px;">
+                        <tr><td>Mata Pelajaran</td><td>: ${mapel}</td></tr>
+                        <tr><td>Kelas / Rombel</td><td>: ${rombel}</td></tr>
+                        <tr><td>Sekolah</td><td>: SMP KRISTEN DORKAS</td></tr>
+                    </table>
+                    <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse;">
+                        <thead style="background-color: #f2f2f2;">
+                            <tr>
+                                <th>No</th>
+                                <th>Kompetensi Dasar</th>
+                                <th>Materi</th>
+                                <th>Indikator Soal</th>
+                                <th>Level</th>
+                                <th>No Soal</th>
+                                <th>Bentuk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${currentKisiKisiData.map(item => `
+                                <tr>
+                                    <td align="center">${item.no}</td>
+                                    <td>${item.kd}</td>
+                                    <td>${item.materi}</td>
+                                    <td>${item.indikator}</td>
+                                    <td align="center">${item.level}</td>
+                                    <td align="center">${item.no_soal}</td>
+                                    <td align="center">${item.bentuk}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Simple blob trick for .doc
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+                "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+                "xmlns='http://www.w3.org/TR/REC-html40'>"+
+                "<head><meta charset='utf-8'><title>Export HTML to Word</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + html + footer;
+            
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+            fileDownload.download = `Kisi-kisi_${mapel}_${rombel}.doc`;
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+        }
+
+        function downloadKisiKisiPdf() {
+            if (!currentKisiKisiData.length) return;
+            const element = document.getElementById('kisi-kisi-result').cloneNode(true);
+            // Hide the buttons in the clone
+            element.querySelector('.flex.gap-2').style.display = 'none';
+            element.querySelector('button.mt-4').style.display = 'none';
+            
+            const opt = {
+                margin:       1,
+                filename:     `Kisi-kisi_${document.getElementById('kk-mapel').value}_${document.getElementById('kk-rombel').value}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
         }
 
         function showStaticModeWarning() {

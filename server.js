@@ -352,6 +352,73 @@ app.post('/api/generate-ai', async (req, res) => {
     return res.status(500).json({ error: lastError || 'AI generation failed' });
 });
 
+// ─── API: Kisi-kisi Generate ──────────────────────────────────────────────────
+app.post('/api/generate-kisi-kisi', async (req, res) => {
+    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+    if (!GOOGLE_API_KEY) return res.status(500).json({ error: 'GOOGLE_API_KEY not configured' });
+    
+    const { questions, mapel = '', rombel = '' } = req.body;
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+        return res.status(400).json({ error: 'Questions are required' });
+    }
+
+    // Limit questions to avoid token overflow 
+    const limitedQuestions = questions.slice(0, 50);
+    const questionsText = limitedQuestions.map((q, i) => `[${i+1}] ${q.text} (Type: ${q.type || 'single'})`).join('\n');
+
+    const prompt = `Analisis soal-soal berikut dan buatkan matriks Kisi-kisi Ujian untuk mata pelajaran ${mapel} kelas ${rombel}.\n` +
+        `Berikan output dalam format JSON array of objects dengan properti:\n` +
+        `- no: nomor urut (1, 2, ...)\n` +
+        `- kd: Kompetensi Dasar (analisis dari konten soal)\n` +
+        `- materi: materi pokok\n` +
+        `- indikator: indikator soal\n` +
+        `- level: level kognitif (L1, L2, L3)\n` +
+        `- no_soal: nomor soal asli\n` +
+        `- bentuk: bentuk soal (PG, PGK, Isian, Menjodohkan)\n\n` +
+        `Soal-soal:\n${questionsText}\n\n` +
+        `Hanya kembalikan JSON array saja tanpa markdown code block.`;
+
+    const models = [
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro',
+        'gemini-pro'
+    ];
+    
+    let lastError;
+    for (const model of models) {
+        try {
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_API_KEY}`,
+                { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
+                });
+            
+            if (!r.ok) { 
+                lastError = `${model}: HTTP ${r.status}`; 
+                continue; 
+            }
+            
+            const j = await r.json();
+            const text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            
+            // Clean AI response to get only JSON array
+            const match = text.match(/\[[\s\S]*\]/);
+            if (!match) { 
+                lastError = 'No JSON in response for ' + model; 
+                continue; 
+            }
+            
+            return res.json({ ok: true, kisiKisi: JSON.parse(match[0]) });
+        } catch (e) { 
+            console.error(`AI Error with model ${model}:`, e.message);
+            lastError = e.message; 
+        }
+    }
+    return res.status(500).json({ error: lastError || 'AI generation failed' });
+});
+
 // ─── API: IPs ─────────────────────────────────────────────────────────────────
 app.get('/api/ips', (req, res) => {
     const { networkInterfaces } = require('os');
