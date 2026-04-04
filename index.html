@@ -1226,6 +1226,9 @@
                                 <button onclick="openTeacherAiModal()"
                                     class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
                                         class="fas fa-robot"></i> Buat Soal AI</button>
+                                <button onclick="deleteTeacherFilteredQuestions()"
+                                    class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 flex items-center gap-2"><i
+                                        class="fas fa-trash-alt"></i> Hapus Soal</button>
                             </div>
                         </div>
 
@@ -4065,6 +4068,48 @@
 
             save();
             renderAdminQuestions();
+            updateStats();
+            alert(`${toDelete.length} soal berhasil dihapus.`);
+        }
+
+        function deleteTeacherFilteredQuestions() {
+            if (!currentSiswa || currentSiswa.role !== 'teacher') return;
+
+            const fM = document.getElementById('teacher-filter-mapel')?.value || '';
+            const fR = document.getElementById('teacher-filter-rombel')?.value || '';
+
+            // Find questions that belong to the teacher AND match current filters
+            const toDelete = db.questions.filter(q => {
+                const qSubject = typeof q.mapel === 'string' ? q.mapel : q.mapel?.name || q.mapel;
+                // Must be teacher's subject
+                if (!teacherSubjectNames(currentSiswa).includes(qSubject)) return false;
+                // Must be in teacher's allowed rombels for that subject
+                const allowed = teacherAllowedRombels(currentSiswa, qSubject);
+                if (!allowed.includes(q.rombel)) return false;
+                // Apply mapel filter
+                if (fM && qSubject !== fM) return false;
+                // Apply rombel filter
+                if (fR && q.rombel !== fR) return false;
+                return true;
+            });
+
+            if (toDelete.length === 0) {
+                alert('Tidak ada soal yang sesuai dengan filter saat ini.');
+                return;
+            }
+
+            const mapelLabel = fM || 'Semua Mapel';
+            const rombelLabel = fR || 'Semua Rombel';
+            const msg = `Anda akan menghapus ${toDelete.length} soal dengan filter:\n\n• Mapel: ${mapelLabel}\n• Rombel: ${rombelLabel}\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?`;
+
+            if (!confirm(msg)) return;
+
+            // Build a Set of references to delete
+            const deleteSet = new Set(toDelete);
+            db.questions = db.questions.filter(q => !deleteSet.has(q));
+
+            save();
+            renderTeacherQuestions();
             updateStats();
             alert(`${toDelete.length} soal berhasil dihapus.`);
         }
