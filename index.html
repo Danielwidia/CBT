@@ -343,6 +343,14 @@
                         <button onclick="showAdminSection('settings'); toggleMobileMenu();"
                             class="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 flex items-center gap-3"><i
                                 class="fas fa-cog"></i> Pengaturan Akun</button>
+                        <div class="border-t border-slate-700 pt-4 mt-4">
+                            <button onclick="exportDatabase()"
+                                class="w-full text-left px-4 py-3 rounded-xl hover:bg-slate-800 flex items-center gap-3"><i
+                                    class="fas fa-download"></i> Backup Data</button>
+                            <button onclick="logout()"
+                                class="w-full text-left px-4 py-3 rounded-xl bg-red-500/20 hover:bg-red-500 hover:text-white text-red-400 flex items-center gap-3 mt-2"><i
+                                    class="fas fa-power-off"></i> Logout</button>
+                        </div>
                     </div>
                 </div>
 
@@ -415,6 +423,9 @@
                             <button onclick="openAiModal()"
                                 class="px-4 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 hover:shadow-lg hover:shadow-rose-200 flex items-center gap-2"><i
                                     class="fas fa-robot"></i> Buat Soal AI</button>
+                            <button onclick="deleteFilteredQuestions()"
+                                class="px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 flex items-center gap-2"><i
+                                    class="fas fa-trash-alt"></i> Hapus Soal</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -4019,6 +4030,43 @@
                     renderAdminQuestions();
                 }
             }
+        }
+
+        function deleteFilteredQuestions() {
+            const fR = document.getElementById('filter-rombel').value;
+            const fM = document.getElementById('filter-mapel').value;
+
+            // Find questions matching current filters
+            const toDelete = db.questions.filter(q =>
+                (fR === 'ALL' || q.rombel === fR) && (fM === 'ALL' || q.mapel === fM)
+            );
+
+            if (toDelete.length === 0) {
+                alert('Tidak ada soal yang sesuai dengan filter saat ini.');
+                return;
+            }
+
+            // Build confirmation message
+            const rombelLabel = fR === 'ALL' ? 'Semua Rombel' : fR;
+            const mapelLabel = fM === 'ALL' ? 'Semua Mapel' : fM;
+            const msg = `Anda akan menghapus ${toDelete.length} soal dengan filter:\n\n• Rombel: ${rombelLabel}\n• Mapel: ${mapelLabel}\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?`;
+
+            if (!confirm(msg)) return;
+
+            // Double confirm if deleting all
+            if (fR === 'ALL' && fM === 'ALL') {
+                if (!confirm(`PERINGATAN: Anda akan menghapus SEMUA ${toDelete.length} soal dari database!\n\nApakah Anda benar-benar yakin?`)) return;
+            }
+
+            // Remove matching questions
+            db.questions = db.questions.filter(q =>
+                !((fR === 'ALL' || q.rombel === fR) && (fM === 'ALL' || q.mapel === fM))
+            );
+
+            save();
+            renderAdminQuestions();
+            updateStats();
+            alert(`${toDelete.length} soal berhasil dihapus.`);
         }
 
         function moveQuestionUp(idx) {
