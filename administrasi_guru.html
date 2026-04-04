@@ -260,8 +260,8 @@
                         <div class="bg-slate-100/50 px-4 py-2 border-b border-slate-200 flex items-center justify-between text-xs font-bold text-slate-500">
                             <span class="uppercase tracking-widest"><i class="fas fa-file-lines mr-1"></i> Mode Editor (Rich Text)</span>
                             <div class="flex items-center gap-3">
-                                <button class="hover:text-slate-800" title="Cetak"><i class="fas fa-print"></i></button>
-                                <button class="hover:text-slate-800" title="Layar Penuh"><i class="fas fa-expand"></i></button>
+                                <button onclick="printResult()" class="hover:text-slate-800" title="Cetak"><i class="fas fa-print"></i></button>
+                                <button onclick="toggleFullscreen()" class="hover:text-slate-800" title="Layar Penuh"><i class="fas fa-expand"></i></button>
                             </div>
                         </div>
                         <div id="editor-content" class="p-8 outline-none overflow-y-auto flex-1 markdown-preview" contenteditable="true">
@@ -543,6 +543,54 @@
             setTimeout(() => {
                 t.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
+        }
+
+        function printResult() {
+            const content = document.getElementById('editor-content').innerHTML;
+            if(!content.trim() || document.getElementById('state-result').classList.contains('hidden')) {
+                return showToast('Tidak ada dokumen yang bisa dicetak', true);
+            }
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Cetak Dokumen - E-Kinerja Guru</title>
+                    <style>
+                        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #000; padding: 20px; }
+                        h1, h2, h3 { color: #000; margin-top: 1em; margin-bottom: 0.5em; }
+                        h2 { border-bottom: 2px solid #000; padding-bottom: 5px; }
+                        p, ul, ol { margin-bottom: 15px; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+                        th { background-color: #f0f0f0; }
+                        @media print {
+                            @page { margin: 2cm; }
+                        }
+                    </style>
+                </head>
+                <body onload="window.print(); window.close();">
+                    ${content}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function toggleFullscreen() {
+            // Container utama dari result (berwarna putih)
+            const elem = document.getElementById('state-result').querySelector('.bg-white');
+            
+            if (!document.fullscreenElement) {
+                // Masuk mode layar penuh
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => showToast('Gagal: ' + err.message, true));
+                }
+            } else {
+                // Keluar mode layar penuh
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
         }
     </script>
 </body>
