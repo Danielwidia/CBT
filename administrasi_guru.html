@@ -336,31 +336,29 @@
                 title: 'Generate Soal & Jawaban',
                 desc: 'Buat butir soal lengkap dengan opsi jawaban dan kunci (HOTS).',
                 extraHtml: `
-                    <div class="grid grid-cols-2 gap-3 mt-4">
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jumlah</label>
-                            <input type="number" id="input-jumlah-soal" value="5" max="20" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm">
-                        </div>
-                    </div>
-
                     <div class="mt-4">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Bentuk Soal (Bisa pilih > 1)</label>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center gap-2 text-sm text-slate-700 font-medium cursor-pointer">
-                                <input type="checkbox" name="bentuk-soal" value="Pilihan Ganda" checked class="w-4 h-4 text-blue-600 rounded border-slate-300"> Pilihan Ganda
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-700 font-medium cursor-pointer">
-                                <input type="checkbox" name="bentuk-soal" value="Pilihan Ganda Kompleks" class="w-4 h-4 text-blue-600 rounded border-slate-300"> PG Kompleks
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-700 font-medium cursor-pointer">
-                                <input type="checkbox" name="bentuk-soal" value="Esai" class="w-4 h-4 text-blue-600 rounded border-slate-300"> Esai
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-700 font-medium cursor-pointer">
-                                <input type="checkbox" name="bentuk-soal" value="Benar/Salah" class="w-4 h-4 text-blue-600 rounded border-slate-300"> Benar / Salah
-                            </label>
-                            <label class="flex items-center gap-2 text-sm text-slate-700 font-medium cursor-pointer">
-                                <input type="checkbox" name="bentuk-soal" value="Menjodohkan" class="w-4 h-4 text-blue-600 rounded border-slate-300"> Menjodohkan
-                            </label>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Jumlah & Bentuk Soal</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="jml-pg" min="0" value="5" class="w-16 px-2 py-2 bg-slate-50 rounded-lg outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                                <span class="text-sm text-slate-700 font-medium">Pilihan Ganda</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="jml-pgk" min="0" value="0" class="w-16 px-2 py-2 bg-slate-50 rounded-lg outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                                <span class="text-sm text-slate-700 font-medium">PG Kompleks</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="jml-esai" min="0" value="0" class="w-16 px-2 py-2 bg-slate-50 rounded-lg outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                                <span class="text-sm text-slate-700 font-medium">Esai</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="jml-bs" min="0" value="0" class="w-16 px-2 py-2 bg-slate-50 rounded-lg outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                                <span class="text-sm text-slate-700 font-medium">Benar / Salah</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="jml-jodoh" min="0" value="0" class="w-16 px-2 py-2 bg-slate-50 rounded-lg outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                                <span class="text-sm text-slate-700 font-medium">Menjodohkan</span>
+                            </div>
                         </div>
                     </div>
 
@@ -371,8 +369,9 @@
                     </div>
 
                     <div class="mt-4">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Integrasi Kisi-kisi (Opsional)</label>
-                        <textarea id="input-referensi-kisi" rows="3" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Tempel/copy tata letak kisi-kisi di sini agar soal yang dihasilkan sesuai dengan indikator pada kisi-kisi..."></textarea>
+                        <label class="flex items-center gap-2 text-sm text-slate-700 font-bold bg-blue-50 p-3 rounded-lg border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
+                            <input type="checkbox" id="input-generate-kisi" checked class="w-5 h-5 text-blue-600 rounded border-slate-300"> Buatkan Kisi-kisi untuk soal-soal ini
+                        </label>
                     </div>
                 `
             }
@@ -462,12 +461,23 @@
                 } else if (currentActiveTab === 'kisi-kisi') {
                     extraData.jenis = document.getElementById('input-jenis-ujian')?.value || 'Soal Ujian Tertulis';
                 } else if (currentActiveTab === 'soal-jawaban') {
-                    extraData.jumlah = document.getElementById('input-jumlah-soal')?.value || '5';
-                    const bentukSoalCheckboxes = document.querySelectorAll('input[name="bentuk-soal"]:checked');
-                    const bentukSoalArr = Array.from(bentukSoalCheckboxes).map(cb => cb.value);
-                    extraData.bentuk = bentukSoalArr.length > 0 ? bentukSoalArr.join(', ') : 'Pilihan Ganda';
+                    const pg = parseInt(document.getElementById('jml-pg')?.value) || 0;
+                    const pgk = parseInt(document.getElementById('jml-pgk')?.value) || 0;
+                    const esai = parseInt(document.getElementById('jml-esai')?.value) || 0;
+                    const bs = parseInt(document.getElementById('jml-bs')?.value) || 0;
+                    const jodoh = parseInt(document.getElementById('jml-jodoh')?.value) || 0;
+
+                    let rinci = [];
+                    if (pg > 0) rinci.push(`${pg} soal Pilihan Ganda`);
+                    if (pgk > 0) rinci.push(`${pgk} soal PG Kompleks`);
+                    if (esai > 0) rinci.push(`${esai} soal Esai`);
+                    if (bs > 0) rinci.push(`${bs} soal Benar/Salah`);
+                    if (jodoh > 0) rinci.push(`${jodoh} soal Menjodohkan`);
+
+                    extraData.jumlahPerBentuk = rinci.length > 0 ? rinci.join(', ') : '5 soal Pilihan Ganda';
+                    
                     extraData.opsiGambar = document.getElementById('input-opsi-gambar')?.checked ? true : false;
-                    extraData.referensiKisi = document.getElementById('input-referensi-kisi')?.value.trim() || '';
+                    extraData.generateKisiKisi = document.getElementById('input-generate-kisi')?.checked ? true : false;
                 }
 
                 const payload = {

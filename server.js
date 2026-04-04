@@ -486,14 +486,14 @@ app.post('/api/generate-admin-doc', async (req, res) => {
         promptText = `Buatkan ${docType} (Bentuk: ${extraData?.jenis || 'Soal Ujian Tertulis'}) untuk mata pelajaran ${mapel} materi "${topik}" fase ${fase}. Sajikan dalam bentuk format matriks yang merinci: Indikator Soal, Level Kognitif (seperti L1/L2/L3 atau C1-C6), dan Bentuk Soal.`;
     } else if (type === 'soal-jawaban') {
         docType = `Soal dan Kunci Jawaban`;
-        promptText = `Buatkan ${extraData?.jumlah || '5'} instrumen Soal dan Kunci Jawaban untuk mata pelajaran ${mapel} fase ${fase} materi "${topik}". Bentuk soal yang diharapkan adalah: ${extraData?.bentuk || 'Pilihan Ganda'}. Usahakan tipe soal HOTS (Higher Order Thinking Skills). Berikan juga pembahasan singkat untuk masing-masing soal.`;
+        promptText = `Buatkan instrumen Soal dan Kunci Jawaban untuk mata pelajaran ${mapel} fase ${fase} materi "${topik}". Rincian jumlah dan bentuk soal yang diharapkan adalah: ${extraData?.jumlahPerBentuk || '5 soal Pilihan Ganda'}. Usahakan tipe soal HOTS (Higher Order Thinking Skills). Berikan juga pembahasan singkat untuk masing-masing soal.`;
         
         if (extraData?.opsiGambar) {
             promptText += `\nUntuk menambah kualitas, sisipkan BUKTI GAMBAR/ILUSTRASI pada beberapa soal menggunakan tag HTML <img src="https://placehold.co/400x300?text=[Kata+Kunci]" alt="Ilustrasi"> (Ganti [Kata+Kunci] dengan deskripsi gambar, misal text=Sistem+Pencernaan).`;
         }
         
-        if (extraData?.referensiKisi) {
-            promptText += `\n\nPenting: Pembuatan soal harus BERPEDOMAN pada Kisi-kisi/Indikator berikut ini:\n` + extraData.referensiKisi;
+        if (extraData?.generateKisiKisi) {
+            promptText += `\n\nPenting: Berdasarkan soal-soal yang Anda buat, buatkan juga matriks KISI-KISI UJIAN yang menjadi panduannya (Lengkap dengan Indikator Soal dan Level Kognitif) dan tampilkan matriks tersebut pada bagian PALING ATAS / AWAL dari dokumen sebelum daftar soal.`;
         }
     } else {
         return res.status(400).json({ error: 'Tipe dokumen tidak valid' });
