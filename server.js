@@ -9,17 +9,17 @@ const { parseWordDocument } = require('./wordParser');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ limit: '20mb', extended: true }));
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ limit: '200mb', extended: true }));
 
 const rootPath = __dirname;
 
 // ─── Environment ──────────────────────────────────────────────────────────────
-const SUPABASE_URL  = process.env.SUPABASE_URL;
-const SUPABASE_KEY  = process.env.SUPABASE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 // Local fallback paths
-const LOCAL_DATA    = path.join(process.cwd(), 'database.json');
+const LOCAL_DATA = path.join(process.cwd(), 'database.json');
 const LOCAL_RESULTS = path.join(process.cwd(), 'results.json');
 
 const USE_SUPABASE = !!(SUPABASE_URL && SUPABASE_KEY);
@@ -37,23 +37,23 @@ const DEFAULT_DB = {
     subjects: [
         { name: 'Pendidikan Agama', locked: false },
         { name: 'Bahasa Indonesia', locked: false },
-        { name: 'Matematika',       locked: false },
-        { name: 'IPA',              locked: false },
-        { name: 'IPS',              locked: false },
-        { name: 'Bahasa Inggris',   locked: false }
+        { name: 'Matematika', locked: false },
+        { name: 'IPA', locked: false },
+        { name: 'IPS', locked: false },
+        { name: 'Bahasa Inggris', locked: false }
     ],
-    rombels:    ['VII', 'VIII', 'IX'],
-    questions:  [],
-    students:   [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
-    results:    [],
-    schedules:  [],
+    rombels: ['VII', 'VIII', 'IX'],
+    questions: [],
+    students: [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
+    results: [],
+    schedules: [],
     timeLimits: {}
 };
 
 // ─── Merge helpers ────────────────────────────────────────────────────────────
 function mergeResults(existing = [], incoming = []) {
     const map = new Map();
-    const key = r => `${r.studentId||''}::${r.mapel||''}::${r.rombel||''}::${r.date||''}`;
+    const key = r => `${r.studentId || ''}::${r.mapel || ''}::${r.rombel || ''}::${r.date || ''}`;
     existing.forEach(r => map.set(key(r), r));
     incoming.forEach(r => {
         const k = key(r);
@@ -71,7 +71,7 @@ async function readDB() {
             .eq('id', 1)
             .single();
         if (error && error.code !== 'PGRST116') {
-             console.error('Supabase readDB error:', error);
+            console.error('Supabase readDB error:', error);
         }
         let dbObj = data ? data.data : null;
         if (dbObj) {
@@ -110,8 +110,8 @@ async function readResults() {
             .select('data')
             .order('created_at', { ascending: false });
         if (error) {
-             console.error('Supabase readResults error:', error);
-             return [];
+            console.error('Supabase readResults error:', error);
+            return [];
         }
         return data.map(row => row.data);
     }
@@ -131,7 +131,7 @@ async function writeResults(results) {
         if (toDelete.length > 0) {
             console.log(`🗑️ Deleting ${toDelete.length} results from Supabase...`);
             // Run deletions in parallel with a limited concurrency or just Promise.all if count is small
-            await Promise.all(toDelete.map(r => 
+            await Promise.all(toDelete.map(r =>
                 supabase
                     .from('cbt_results')
                     .delete()
@@ -195,8 +195,13 @@ async function insertResultSingle(resultObj) {
 }
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
-app.get('/',         (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
+app.use(express.static(rootPath));
+app.get('/', (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
 app.get('/logo.png', (req, res) => res.sendFile(path.join(rootPath, 'logo.png')));
+app.get('/admin', (req, res) => res.sendFile(path.join(rootPath, 'admin.html')));
+app.get('/teacher', (req, res) => res.sendFile(path.join(rootPath, 'teacher.html')));
+app.get('/student', (req, res) => res.sendFile(path.join(rootPath, 'student.html')));
+
 
 app.use((req, res, next) => { console.log(`${req.method} ${req.url}`); next(); });
 
@@ -211,7 +216,7 @@ app.get('/api/health', async (req, res) => {
         try {
             const { error: dbError } = await supabase.from('cbt_database').select('id').limit(1);
             if (dbError) throw dbError;
-            
+
             status.db_connection = 'OK';
             status.ok = true;
         } catch (e) {
@@ -340,8 +345,10 @@ app.post('/api/generate-ai', async (req, res) => {
     for (const model of models) {
         try {
             const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_API_KEY}`,
-                { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+                {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
             if (!r.ok) { lastError = `${model}: HTTP ${r.status}`; continue; }
             const j = await r.json();
             const text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -370,7 +377,7 @@ app.use('/api', (err, req, res, next) => res.status(err.status || 500).json({ er
 
 // ─── Local Init ───────────────────────────────────────────────────────────────
 if (!USE_SUPABASE) {
-    if (!fs.existsSync(LOCAL_DATA))    fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
+    if (!fs.existsSync(LOCAL_DATA)) fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
     if (!fs.existsSync(LOCAL_RESULTS)) fs.writeFileSync(LOCAL_RESULTS, '[]');
 }
 

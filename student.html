@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - CBT SMP KRISTEN DORKAS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen select-none">
+    <!-- Anti-Cheat Content Mask -->
+    <div id="cheat-mask" class="fixed inset-0 bg-slate-900 z-[99] hidden items-center justify-center pointer-events-none">
+        <div class="text-center text-white p-8">
+            <i class="fas fa-eye-slash text-6xl mb-4 text-slate-500"></i>
+            <h3 class="text-xl font-bold">KONTEN DISEMBUNYIKAN</h3>
+            <p class="text-slate-400 text-sm">Kembali ke tab ujian untuk melanjutkan.</p>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="student-dashboard" class="min-h-screen flex flex-col">
+        <nav class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" class="w-8 h-8 object-contain" onerror="this.src='https://placehold.co/32x32?text=Logo'">
+                <div>
+                    <h2 class="text-xs font-black text-sky-600 uppercase tracking-tight">CBT DORKAS</h2>
+                    <p id="st-info-label" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="exam-timer-container" class="hidden items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100">
+                    <i class="fas fa-clock text-amber-500 text-xs"></i>
+                    <span id="exam-timer" class="text-xs font-black text-amber-700 font-mono">00:00:00</span>
+                </div>
+                <button onclick="logout()" id="logout-btn" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg font-black text-[10px] hover:bg-red-600 hover:text-white transition-all uppercase">Keluar</button>
+            </div>
+        </nav>
+
+        <main class="flex-1 p-4 md:p-8">
+            <div id="student-exam-list-container" class="max-w-4xl mx-auto">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-black text-slate-800 mb-2">Daftar Ujian</h1>
+                    <p class="text-slate-400 text-sm">Pilih mata pelajaran yang akan diujikan hari ini.</p>
+                </div>
+                <div id="student-exam-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Exam cards will be injected here -->
+                </div>
+            </div>
+
+            <!-- Exam Interface (Initially Hidden) -->
+            <div id="exam-interface" class="hidden max-w-5xl mx-auto h-full flex flex-col">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1">
+                    <!-- Question Area -->
+                    <div class="lg:col-span-3 space-y-6">
+                        <div class="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm relative min-h-[400px]">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="px-4 py-1.5 bg-sky-100 text-sky-700 rounded-full text-[10px] font-black uppercase tracking-widest">SOAL NO. <span id="current-q-num">1</span></span>
+                                <span id="q-type-label" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">PILIHAN GANDA</span>
+                            </div>
+                            
+                            <div id="question-content" class="text-slate-800 text-lg leading-relaxed mb-8">
+                                <!-- Question text and images will be here -->
+                            </div>
+
+                            <div id="options-container" class="space-y-3">
+                                <!-- Options will be injected here -->
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center gap-4">
+                            <button onclick="prevQuestion()" id="prev-btn" class="flex-1 py-4 bg-white border border-slate-200 text-slate-600 font-black rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+                                <i class="fas fa-arrow-left"></i> SEBELUMNYA
+                            </button>
+                            <button onclick="nextQuestion()" id="next-btn" class="flex-1 py-4 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-700 shadow-xl shadow-sky-100 transition-all flex items-center justify-center gap-3">
+                                BERIKUTNYA <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Panel -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm sticky top-24">
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Navigasi Soal</h4>
+                            <div id="q-nav-grid" class="grid grid-cols-5 gap-2 mb-6">
+                                <!-- Numbers will be here -->
+                            </div>
+                            <button onclick="confirmSubmit()" class="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-3">
+                                <i class="fas fa-check-double"></i> SELESAI UJIAN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Instruction Modal -->
+    <div id="student-instruction-modal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-[32px] max-w-lg w-full p-8 shadow-2xl animate-fade-in text-center">
+            <div class="w-20 h-20 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-info-circle text-4xl"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-4">Petunjuk Ujian</h3>
+            <div class="text-left space-y-4 mb-8">
+                <p class="text-sm text-slate-600 leading-relaxed">Selamat datang di ujian online SMP Kristen Dorkas. Perhatikan beberapa poin berikut:</p>
+                <ul class="text-xs text-slate-500 space-y-2 list-disc pl-5">
+                    <li>Dilarang keluar dari tab ujian.</li>
+                    <li>Waktu akan terus berjalan meski koneksi terputus.</li>
+                    <li>Jawaban tersimpan otomatis setiap Anda berpindah soal.</li>
+                    <li>Pastikan semua soal sudah terjawab (warna biru di panel navigasi).</li>
+                </ul>
+            </div>
+            <button onclick="closeStudentInstructionModal()" class="w-full py-4 bg-sky-600 text-white font-black rounded-2xl hover:bg-sky-700 transition-all">SAYA MENGERTI</button>
+        </div>
+    </div>
+
+    <!-- Cheat Warning Modal -->
+    <div id="cheat-warning-modal" class="fixed inset-0 bg-red-900/95 hidden items-center justify-center p-4 z-[100] backdrop-blur-md">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 shadow-2xl animate-bounce text-center">
+            <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-exclamation-triangle text-4xl"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">PERINGATAN KERAS!</h3>
+            <p id="cheat-warning-text" class="text-slate-600 mb-8 leading-relaxed text-sm">Terdeteksi upaya keluar dari halaman ujian.</p>
+            <button onclick="closeCheatWarning()" class="w-full py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all uppercase tracking-widest">SAYA MENGERTI</button>
+        </div>
+    </div>
+
+    <!-- Submitting Modal -->
+    <div id="submitting-modal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-[110] backdrop-blur-lg">
+        <div class="text-center text-white">
+            <div class="relative w-24 h-24 mx-auto mb-8">
+                <div class="absolute inset-0 border-4 border-sky-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-sky-500 rounded-full border-t-transparent animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-cloud-upload-alt text-3xl"></i>
+                </div>
+            </div>
+            <h3 class="text-3xl font-black mb-4">Mengamankan Data...</h3>
+            <p id="submitting-timer" class="text-sky-300 font-mono text-xl animate-pulse">SIAP DALAM 5 DETIK</p>
+        </div>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div id="image-zoom-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-4 z-[120] backdrop-blur-sm" onclick="if(event.target === this) closeImageZoom()">
+        <div class="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <button onclick="closeImageZoom()" class="absolute top-4 right-4 text-white hover:text-slate-200 text-3xl"><i class="fas fa-times-circle"></i></button>
+            <img id="zoom-image-display" src="" alt="Zoom" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl">
+        </div>
+    </div>
+
+    <script src="assets/js/core.js"></script>
+    <script src="assets/js/student.js"></script>
+</body>
+</html>
