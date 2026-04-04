@@ -156,15 +156,20 @@
                     
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mata Pelajaran</label>
-                        <select id="input-mapel" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
-                            <option value="Pendidikan Agama">Pendidikan Agama</option>
-                            <option value="Bahasa Indonesia">Bahasa Indonesia</option>
-                            <option value="Matematika">Matematika</option>
-                            <option value="IPA">Ilmu Pengetahuan Alam (IPA)</option>
-                            <option value="IPS">Ilmu Pengetahuan Sosial (IPS)</option>
-                            <option value="Bahasa Inggris">Bahasa Inggris</option>
-                            <option value="Informatika">Informatika</option>
-                        </select>
+                        <input type="text" list="mapel-list" id="input-mapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-amber-500 font-semibold text-sm text-slate-700">
+                        <datalist id="mapel-list">
+                            <option value="Pendidikan Agama">
+                            <option value="Bahasa Indonesia">
+                            <option value="Matematika">
+                            <option value="Ilmu Pengetahuan Alam (IPA)">
+                            <option value="Ilmu Pengetahuan Sosial (IPS)">
+                            <option value="Bahasa Inggris">
+                            <option value="Informatika">
+                            <option value="Seni Budaya">
+                            <option value="Prakarya">
+                            <option value="PJOK">
+                            <option value="Muatan Lokal">
+                        </datalist>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -358,8 +363,16 @@
         // Initialize first tab extra inputs securely just in case
         switchTab('atp-cp');
 
-        function generateWithAI() {
+        async function generateWithAI() {
+            const mapel = document.getElementById('input-mapel').value.trim();
             const topic = document.getElementById('input-topik').value.trim();
+            
+            if(!mapel) {
+                showToast('Mohon masukkan Mata Pelajaran', true);
+                document.getElementById('input-mapel').focus();
+                return;
+            }
+
             if(!topic) {
                 showToast('Mohon masukkan Topik / Materi Utama', true);
                 document.getElementById('input-topik').focus();
@@ -375,74 +388,65 @@
                 "Menganalisis pedoman Kurikulum Merdeka...",
                 "Menyelaraskan fase perkembangan peserta didik...",
                 "Merangkai kalimat yang operasional dan terukur...",
-                "Memformat hasil ke dalam rancangan dokumen..."
+                "Memformat hasil ke dalam rancangan dokumen...",
+                "Proses ini memakan waktu 10-30 detik..."
             ];
 
             let textIndex = 0;
             const textInterval = setInterval(() => {
                 textIndex = (textIndex + 1) % loadingTexts.length;
                 document.getElementById('loading-text').innerText = loadingTexts[textIndex];
-            }, 1000);
+            }, 3000);
 
-            // SIMULASI PROSES AI (Fetch ke backend di implementasi reel)
-            setTimeout(() => {
+            try {
+                // Siapkan extraData dari form spesifik
+                const extraData = {};
+                if (currentActiveTab === 'modul-ajar') {
+                    extraData.waktu = document.getElementById('input-waktu')?.value || '2 x 40 Menit';
+                    extraData.model = document.getElementById('input-model')?.value || 'Problem Based Learning';
+                } else if (currentActiveTab === 'prota-promes') {
+                    extraData.pekan = document.getElementById('input-pekan')?.value || '18';
+                } else if (currentActiveTab === 'kisi-kisi') {
+                    extraData.jenis = document.getElementById('input-jenis-ujian')?.value || 'Soal Ujian Tertulis';
+                } else if (currentActiveTab === 'soal-jawaban') {
+                    extraData.jumlah = document.getElementById('input-jumlah-soal')?.value || '5';
+                    extraData.bentuk = document.getElementById('input-bentuk-soal')?.value || 'Pilihan Ganda';
+                }
+
+                const payload = {
+                    type: currentActiveTab,
+                    mapel: mapel,
+                    fase: document.getElementById('input-fase').value,
+                    semester: document.getElementById('input-semester').value,
+                    topik: topic,
+                    extraData: extraData
+                };
+
+                const response = await fetch('/api/generate-admin-doc', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
                 clearInterval(textInterval);
-                finishGeneration();
-            }, 3500);
-        }
 
-        function finishGeneration() {
-            document.getElementById('state-loading').classList.add('hidden');
-            document.getElementById('state-result').classList.remove('hidden');
+                if (!response.ok) {
+                    const err = await response.json().catch(()=>({}));
+                    throw new Error(err.error || response.statusText);
+                }
 
-            const mapel = document.getElementById('input-mapel').value;
-            const fase = document.getElementById('input-fase').value;
-            const topik = document.getElementById('input-topik').value;
-            const title = config[currentActiveTab].title;
-
-            // Mockup content response
-            const mockupHtml = `
-                <div class="text-center mb-6">
-                    <h1 class="uppercase text-xl font-black text-slate-800">DOKUMEN ${title}</h1>
-                    <p class="text-sm font-bold text-slate-500">Mata Pelajaran: ${mapel} | ${fase}</p>
-                    <p class="text-xs text-slate-500">Topik Utama: ${topik}</p>
-                </div>
-                <hr class="mb-4">
-                <h2>1. Informasi Umum</h2>
-                <p>Dokumen ini dirancang otomatis untuk membantu pelaksanaan pembelajaran berdiferensiasi dan mengacu pada standar Kurikulum.</p>
+                const data = await response.json();
                 
-                <h2>2. Rincian / Matriks</h2>
-                <table border="1" class="w-full">
-                    <thead>
-                        <tr>
-                            <th>Komponen</th>
-                            <th>Deskripsi / Uraian</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Tujuan</strong></td>
-                            <td>Peserta didik mampu memahami dan menerapkan konsep dasar ${topik} dalam konteks kehidupan sehari-hari secara kritis dan kreatif.</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Indikator Keberhasilan</strong></td>
-                            <td>
-                                <ul>
-                                    <li>Menganalisis elemen-elemen utama.</li>
-                                    <li>Mempresentasikan hasil temuan kolaboratif.</li>
-                                </ul>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h2>3. Strategi / Metode</h2>
-                <p>Direkomendasikan menggunakan pendekatan saintifik dan diskusi kelompok agar memancing Higher Order Thinking Skills (HOTS).</p>
-                <br><br><br>
-                <p class="text-[10px] text-slate-400 italic text-center">* Dokumen ini dibuat (drafting) oleh AI Assistant. Guru disarankan untuk mengkaji dan menyesuaikan kembali dengan karakteristik rombel masing-masing.</p>
-            `;
-
-            document.getElementById('editor-content').innerHTML = mockupHtml;
+                document.getElementById('state-loading').classList.add('hidden');
+                document.getElementById('state-result').classList.remove('hidden');
+                document.getElementById('editor-content').innerHTML = data.html;
+                
+            } catch (e) {
+                clearInterval(textInterval);
+                document.getElementById('state-loading').classList.add('hidden');
+                document.getElementById('state-empty').classList.remove('hidden');
+                showToast('Gagal memproses AI: ' + e.message, true);
+            }
         }
 
         function copyResult() {

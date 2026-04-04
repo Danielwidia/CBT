@@ -458,6 +458,60 @@ app.post('/api/generate-ai', async (req, res) => {
     }
 });
 
+// ─── API: Generate Admin Doc ──────────────────────────────────────────────────
+app.post('/api/generate-admin-doc', async (req, res) => {
+    const { type, mapel, fase, semester, topik, extraData } = req.body;
+    
+    if (!mapel || !topik) {
+        return res.status(400).json({ error: 'Mapel dan Topik diwajibkan' });
+    }
+    
+    let promptText = '';
+    let docType = '';
+
+    if (type === 'atp-cp') {
+        docType = `Capaian Pembelajaran (CP) dan Alur Tujuan Pembelajaran (ATP)`;
+        promptText = `Buatkan rumusan ${docType} untuk mata pelajaran ${mapel} kelas/fase ${fase} semester ${semester} dengan materi pokok "${topik}". Sertakan Elemen, Capaian Pembelajaran, Tujuan Pembelajaran, dan Alur Tujuan Pembelajaran secara sistematis dalam bentuk paragraf atau tabel sesuai standar Kurikulum Merdeka.`;
+    } else if (type === 'kktp') {
+        docType = `Kriteria Ketercapaian Tujuan Pembelajaran (KKTP)`;
+        promptText = `Buatkan rancangan ${docType} (berupa rubrik penilaian/deskripsi ketercapaian) untuk mata pelajaran ${mapel} kelas/fase ${fase} dengan topik/materi "${topik}". Standar pengisian mengikuti Kurikulum Merdeka, cantumkan Interval Nilai dan Deskripsinya.`;
+    } else if (type === 'modul-ajar') {
+        docType = `Modul Ajar (RPP Plus)`;
+        promptText = `Buatkan draf Modul Ajar untuk kelas/fase ${fase} mata pelajaran ${mapel} semester ${semester} mengenai topik "${topik}". Alokasi waktu cadangan: ${extraData?.waktu || '2 x 40 Menit'}. Gunakan Model Pembelajaran: ${extraData?.model || 'Problem Based Learning'}. Berisikan Identitas, Kompetensi Awal, Profil Pelajar Pancasila, Kegiatan Pendahuluan, Kegiatan Inti, Kegiatan Penutup, dan Asesmen secara rinci.`;
+    } else if (type === 'prota-promes') {
+        docType = `Prota dan Promes`;
+        promptText = `Rancang secara ringkas Program Tahunan (Prota) dan Program Semester (Promes) pada mata pelajaran ${mapel} fase ${fase} semester ${semester} mengenai ranah materi "${topik}". Total Pekan Efektif yang direncanakan: ${extraData?.pekan || '18'} Pekan.`;
+    } else if (type === 'kisi-kisi') {
+        docType = `Kisi-kisi Ujian`;
+        promptText = `Buatkan ${docType} (Bentuk: ${extraData?.jenis || 'Soal Ujian Tertulis'}) untuk mata pelajaran ${mapel} materi "${topik}" fase ${fase}. Sajikan dalam bentuk format matriks yang merinci: Indikator Soal, Level Kognitif (seperti L1/L2/L3 atau C1-C6), dan Bentuk Soal.`;
+    } else if (type === 'soal-jawaban') {
+        docType = `Soal dan Kunci Jawaban`;
+        promptText = `Buatkan ${extraData?.jumlah || '5'} instrumen Soal dan Kunci Jawaban untuk mata pelajaran ${mapel} fase ${fase} materi "${topik}". Bentuk soal yang diharapkan adalah: ${extraData?.bentuk || 'Pilihan Ganda'}. Usahakan tipe soal HOTS (Higher Order Thinking Skills). Berikan juga pembahasan singkat untuk masing-masing soal.`;
+    } else {
+        return res.status(400).json({ error: 'Tipe dokumen tidak valid' });
+    }
+
+    const fullPrompt = `${promptText}
+
+PERINTAH FORMATTING: 
+Tulis output HANYA MENGGUNAKAN tag HTML (tanpa tag <html>, <head>, atau <body>) agar saya bisa langsung menampilkannya di div innerHTML. Gunakan tag <h1>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em>, <p>, dan <table> (untuk data matriks).
+Berikan juga CSS inline jika dibutuhkan untuk struktur tabel (seperti: <table border="1" style="width:100%; border-collapse: collapse; text-align: left; margin-bottom: 20px;"><tr><th style="padding: 8px; background: #f1f5f9;">...</th></tr>).
+DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG menggunakan markdown block (seperti \`\`\`html). Output harus 100% kode HTML mentah.`;
+
+    try {
+        let text = await callGeminiAI(fullPrompt);
+        
+        // Membersihkan markdown wrapper (```html ... ```) jika AI membocorkannya
+        text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+        console.log(`[/api/generate-admin-doc] Success for ${docType}`);
+        return res.json({ ok: true, html: text });
+    } catch (e) {
+        console.error('[/api/generate-admin-doc] Fatal error:', e.message);
+        return res.status(500).json({ error: e.message });
+    }
+});
+
 // ─── API: Kisi-kisi Generate ──────────────────────────────────────────────────
 app.post('/api/generate-kisi-kisi', async (req, res) => {
     const { questions, mapel = '', rombel = '' } = req.body;
