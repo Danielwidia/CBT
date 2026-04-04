@@ -243,8 +243,8 @@ app.get('/api/db', async (req, res) => {
 app.post('/api/db', async (req, res) => {
     try {
         const payload = req.body;
-        if (Array.isArray(payload.results) && payload.results.length > 0) {
-            // Bulk insert results directly in standard payload format
+        // Backward compatibility: if entire DB is sent
+        if (Array.isArray(payload.results)) {
             await writeResults(payload.results);
         }
         const { results, ...dbOnly } = payload;
@@ -252,6 +252,71 @@ app.post('/api/db', async (req, res) => {
         return res.json({ ok: true });
     } catch (e) {
         console.error('POST /api/db error:', e.message);
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+// New granular endpoints
+app.post('/api/db/settings', async (req, res) => {
+    try {
+        const settings = req.body;
+        const current = await readDB() || { ...DEFAULT_DB };
+        const updated = { ...current, ...settings };
+        delete updated.questions; // Keep current questions
+        delete updated.results;   // Keep current results
+        await writeDB(updated);
+        return res.json({ ok: true });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/db/questions', async (req, res) => {
+    try {
+        const { questions, append } = req.body;
+        if (!Array.isArray(questions)) return res.status(400).json({ error: 'Questions array required' });
+        
+        const current = (await readDB()) || { ...DEFAULT_DB };
+        if (append) {
+            current.questions = [...(current.questions || []), ...questions];
+        } else {
+            current.questions = questions;
+        }
+        await writeDB(current);
+        return res.json({ ok: true, count: current.questions.length });
+    } catch (e) {
+        console.error('POST /api/db/questions error:', e.message);
+        return res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/db/results', async (req, res) => {
+    try {
+        const { results, append } = req.body;
+        if (!Array.isArray(results)) return res.status(400).json({ error: 'Results array required' });
+        
+        if (append) {
+            await writeResults(results); // writeResults is additive in Supabase, but replaces in local
+            // In local mode, we need to read first if we want to append
+            if (!USE_SUPABASE) {
+                const current = await readResults();
+                const merged = mergeResults(current, results);
+                await writeResults(merged);
+            }
+        } else {
+            // Replacement: In local mode just write. In Supabase, this is tricky.
+            // For now, let's treat append:false as "clear and write"
+            if (!USE_SUPABASE) {
+                await writeResults(results);
+            } else {
+                // Supabase: we'd need to delete all then insert. 
+                // But writeResults already handles deletions if the objects have deleted:true.
+                await writeResults(results);
+            }
+        }
+        return res.json({ ok: true });
+    } catch (e) {
+        console.error('POST /api/db/results error:', e.message);
         return res.status(500).json({ error: e.message });
     }
 });
@@ -277,6 +342,7 @@ app.post('/api/results', async (req, res) => {
         return res.status(500).json({ error: e.message });
     }
 });
+
 
 app.post('/api/result', async (req, res) => {
     try {

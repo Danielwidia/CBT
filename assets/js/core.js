@@ -144,39 +144,70 @@ async function saveLocalDb() {
 
 async function save() {
     let serverSaveSuccess = false;
-    let retries = 3;
+    let retries = 2; // Try total 2 times for segmented save
+
+    const apiBase = getApiBaseUrl();
 
     while (retries > 0 && !serverSaveSuccess) {
         try {
-            const res = await fetch(getApiBaseUrl() + '/api/db', {
+            console.log('Starting segmented database sync...');
+            
+            // 1. Save Settings (Subjects, Rombels, Students, Schedules, TimeLimits)
+            // We clone db to avoid side effects during deletion
+            const { questions, results, ...settings } = db;
+            const res1 = await fetch(apiBase + '/api/db/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(db)
+                body: JSON.stringify(settings)
             });
+            if (!res1.ok) throw new Error('Failed to save core settings');
 
-            if (res.ok) {
-                serverSaveSuccess = true;
-                console.log('Database saved to server');
-            } else {
-                const errorText = await res.text().catch(() => '');
-                console.warn(`Server save failed (attempt ${4 - retries}):`, res.status, res.statusText, errorText);
-                retries--;
-                if (retries > 0) await new Promise(r => setTimeout(r, 1000));
+            // 2. Save Questions in batches (Avoid Vercel 4.5MB limit)
+            const questionList = questions || [];
+            const Q_BATCH = 10; // Small batch for safe image transport
+            for (let i = 0; i < questionList.length; i += Q_BATCH) {
+                const chunk = questionList.slice(i, i + Q_BATCH);
+                console.log(`Syncing questions: batch ${Math.floor(i/Q_BATCH) + 1}...`);
+                const resQ = await fetch(apiBase + '/api/db/questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ questions: chunk, append: i > 0 })
+                });
+                if (!resQ.ok) throw new Error(`Failed to save question batch ${Math.floor(i/Q_BATCH) + 1}`);
             }
+
+            // 3. Save Results in batches
+            const resultList = results || [];
+            const R_BATCH = 100; // Results are smaller than questions
+            for (let i = 0; i < resultList.length; i += R_BATCH) {
+                const chunk = resultList.slice(i, i + R_BATCH);
+                console.log(`Syncing results: batch ${Math.floor(i/R_BATCH) + 1}...`);
+                const resR = await fetch(apiBase + '/api/db/results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ results: chunk, append: i > 0 })
+                });
+                if (!resR.ok) throw new Error(`Failed to save results batch ${Math.floor(i/R_BATCH) + 1}`);
+            }
+
+            serverSaveSuccess = true;
+            console.log('Database synced successfully (Segmented)');
         } catch (err) {
-            console.warn(`Server save error (attempt ${4 - retries}):`, err.message);
+            console.warn(`Sync attempt failed:`, err.message);
             retries--;
-            if (retries > 0) await new Promise(r => setTimeout(r, 1000));
+            if (retries > 0) await new Promise(r => setTimeout(r, 2000));
         }
     }
 
+    // Always attempt local save
     try {
         await saveLocalDb();
-    } catch (e) { console.warn('Local persistence failed:', e.message); }
+    } catch (e) { console.warn('Local save failed:', e.message); }
 
     if (typeof updateStats === 'function') updateStats();
     return serverSaveSuccess;
 }
+
 
 // --- AUTH & SESSION ---
 
