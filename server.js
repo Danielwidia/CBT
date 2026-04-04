@@ -9,17 +9,16 @@ const { parseWordDocument } = require('./wordParser');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '200mb' }));
-app.use(express.urlencoded({ limit: '200mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
 
-const rootPath = process.cwd();
+const rootPath = __dirname;
 
 // ─── Environment ──────────────────────────────────────────────────────────────
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_KEY  = process.env.SUPABASE_KEY;
 
 // Local fallback paths
-const LOCAL_DATA = path.join(process.cwd(), 'database.json');
+const LOCAL_DATA    = path.join(process.cwd(), 'database.json');
 const LOCAL_RESULTS = path.join(process.cwd(), 'results.json');
 
 const USE_SUPABASE = !!(SUPABASE_URL && SUPABASE_KEY);
@@ -37,23 +36,23 @@ const DEFAULT_DB = {
     subjects: [
         { name: 'Pendidikan Agama', locked: false },
         { name: 'Bahasa Indonesia', locked: false },
-        { name: 'Matematika', locked: false },
-        { name: 'IPA', locked: false },
-        { name: 'IPS', locked: false },
-        { name: 'Bahasa Inggris', locked: false }
+        { name: 'Matematika',       locked: false },
+        { name: 'IPA',              locked: false },
+        { name: 'IPS',              locked: false },
+        { name: 'Bahasa Inggris',   locked: false }
     ],
-    rombels: ['VII', 'VIII', 'IX'],
-    questions: [],
-    students: [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
-    results: [],
-    schedules: [],
+    rombels:    ['VII', 'VIII', 'IX'],
+    questions:  [],
+    students:   [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
+    results:    [],
+    schedules:  [],
     timeLimits: {}
 };
 
 // ─── Merge helpers ────────────────────────────────────────────────────────────
 function mergeResults(existing = [], incoming = []) {
     const map = new Map();
-    const key = r => `${r.studentId || ''}::${r.mapel || ''}::${r.rombel || ''}::${r.date || ''}`;
+    const key = r => `${r.studentId||''}::${r.mapel||''}::${r.rombel||''}::${r.date||''}`;
     existing.forEach(r => map.set(key(r), r));
     incoming.forEach(r => {
         const k = key(r);
@@ -71,7 +70,7 @@ async function readDB() {
             .eq('id', 1)
             .single();
         if (error && error.code !== 'PGRST116') {
-            console.error('Supabase readDB error:', error);
+             console.error('Supabase readDB error:', error);
         }
         let dbObj = data ? data.data : null;
         if (dbObj) {
@@ -110,8 +109,8 @@ async function readResults() {
             .select('data')
             .order('created_at', { ascending: false });
         if (error) {
-            console.error('Supabase readResults error:', error);
-            return [];
+             console.error('Supabase readResults error:', error);
+             return [];
         }
         return data.map(row => row.data);
     }
@@ -127,12 +126,11 @@ async function writeResults(results) {
         const toDelete = results.filter(r => r.deleted === true);
         const active = results.filter(r => r.deleted !== true);
 
-        // 1. Physically delete from Supabase if marked for deletion (Optimized)
+        // 1. Physically delete from Supabase if marked for deletion
         if (toDelete.length > 0) {
             console.log(`🗑️ Deleting ${toDelete.length} results from Supabase...`);
-            // Run deletions in parallel with a limited concurrency or just Promise.all if count is small
-            await Promise.all(toDelete.map(r =>
-                supabase
+            for (const r of toDelete) {
+                const { error } = await supabase
                     .from('cbt_results')
                     .delete()
                     .match({
@@ -140,8 +138,9 @@ async function writeResults(results) {
                         mapel: r.mapel || '',
                         rombel: r.rombel || '',
                         date: r.date || ''
-                    })
-            ));
+                    });
+                if (error) console.error('Supabase deletion error:', error.message);
+            }
         }
 
         // 2. Insert active results
@@ -195,13 +194,8 @@ async function insertResultSingle(resultObj) {
 }
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
-app.use(express.static(rootPath));
-app.get('/', (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
+app.get('/',         (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
 app.get('/logo.png', (req, res) => res.sendFile(path.join(rootPath, 'logo.png')));
-app.get('/admin', (req, res) => res.sendFile(path.join(rootPath, 'admin.html')));
-app.get('/teacher', (req, res) => res.sendFile(path.join(rootPath, 'teacher.html')));
-app.get('/student', (req, res) => res.sendFile(path.join(rootPath, 'student.html')));
-
 
 app.use((req, res, next) => { console.log(`${req.method} ${req.url}`); next(); });
 
@@ -216,7 +210,7 @@ app.get('/api/health', async (req, res) => {
         try {
             const { error: dbError } = await supabase.from('cbt_database').select('id').limit(1);
             if (dbError) throw dbError;
-
+            
             status.db_connection = 'OK';
             status.ok = true;
         } catch (e) {
@@ -243,8 +237,8 @@ app.get('/api/db', async (req, res) => {
 app.post('/api/db', async (req, res) => {
     try {
         const payload = req.body;
-        // Backward compatibility: if entire DB is sent
-        if (Array.isArray(payload.results)) {
+        if (Array.isArray(payload.results) && payload.results.length > 0) {
+            // Bulk insert results directly in standard payload format
             await writeResults(payload.results);
         }
         const { results, ...dbOnly } = payload;
@@ -252,71 +246,6 @@ app.post('/api/db', async (req, res) => {
         return res.json({ ok: true });
     } catch (e) {
         console.error('POST /api/db error:', e.message);
-        return res.status(500).json({ error: e.message });
-    }
-});
-
-// New granular endpoints
-app.post('/api/db/settings', async (req, res) => {
-    try {
-        const settings = req.body;
-        const current = await readDB() || { ...DEFAULT_DB };
-        const updated = { ...current, ...settings };
-        delete updated.questions; // Keep current questions
-        delete updated.results;   // Keep current results
-        await writeDB(updated);
-        return res.json({ ok: true });
-    } catch (e) {
-        return res.status(500).json({ error: e.message });
-    }
-});
-
-app.post('/api/db/questions', async (req, res) => {
-    try {
-        const { questions, append } = req.body;
-        if (!Array.isArray(questions)) return res.status(400).json({ error: 'Questions array required' });
-        
-        const current = (await readDB()) || { ...DEFAULT_DB };
-        if (append) {
-            current.questions = [...(current.questions || []), ...questions];
-        } else {
-            current.questions = questions;
-        }
-        await writeDB(current);
-        return res.json({ ok: true, count: current.questions.length });
-    } catch (e) {
-        console.error('POST /api/db/questions error:', e.message);
-        return res.status(500).json({ error: e.message });
-    }
-});
-
-app.post('/api/db/results', async (req, res) => {
-    try {
-        const { results, append } = req.body;
-        if (!Array.isArray(results)) return res.status(400).json({ error: 'Results array required' });
-        
-        if (append) {
-            await writeResults(results); // writeResults is additive in Supabase, but replaces in local
-            // In local mode, we need to read first if we want to append
-            if (!USE_SUPABASE) {
-                const current = await readResults();
-                const merged = mergeResults(current, results);
-                await writeResults(merged);
-            }
-        } else {
-            // Replacement: In local mode just write. In Supabase, this is tricky.
-            // For now, let's treat append:false as "clear and write"
-            if (!USE_SUPABASE) {
-                await writeResults(results);
-            } else {
-                // Supabase: we'd need to delete all then insert. 
-                // But writeResults already handles deletions if the objects have deleted:true.
-                await writeResults(results);
-            }
-        }
-        return res.json({ ok: true });
-    } catch (e) {
-        console.error('POST /api/db/results error:', e.message);
         return res.status(500).json({ error: e.message });
     }
 });
@@ -342,7 +271,6 @@ app.post('/api/results', async (req, res) => {
         return res.status(500).json({ error: e.message });
     }
 });
-
 
 app.post('/api/result', async (req, res) => {
     try {
@@ -411,10 +339,8 @@ app.post('/api/generate-ai', async (req, res) => {
     for (const model of models) {
         try {
             const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_API_KEY}`,
-                {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+                { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
             if (!r.ok) { lastError = `${model}: HTTP ${r.status}`; continue; }
             const j = await r.json();
             const text = j.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -443,7 +369,7 @@ app.use('/api', (err, req, res, next) => res.status(err.status || 500).json({ er
 
 // ─── Local Init ───────────────────────────────────────────────────────────────
 if (!USE_SUPABASE) {
-    if (!fs.existsSync(LOCAL_DATA)) fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
+    if (!fs.existsSync(LOCAL_DATA))    fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
     if (!fs.existsSync(LOCAL_RESULTS)) fs.writeFileSync(LOCAL_RESULTS, '[]');
 }
 
