@@ -323,20 +323,47 @@ async function callGeminiAI(prompt) {
 
     if (keys.length === 0) throw new Error('GOOGLE_API_KEY tidak dikonfigurasi di Environment Variables Vercel');
 
-    // Use only current, non-deprecated Gemini models
+    // ⚠️ PENTING: Models diurutkan dari terbaru/terbaik ke fallback lama.
+    // Model yang belum tersedia di API akan mendapat 404 dan di-skip otomatis.
     const models = [
-        'gemini-2.0-flash-001',
+        // ── Gemini 3.x (terbaru, di-skip otomatis jika belum tersedia) ─────────
+        'gemini-3.1-pro',
+        'gemini-3.1-flash',
+        'gemini-3.1-flash-lite',
+        'gemini-3.0-flash',
+        'gemini-3.0',
+
+        // ── Gemini 2.5 ──────────────────────────────────────────────────────────
+        'gemini-2.5-pro',
+        'gemini-2.5-pro-preview',
+        'gemini-2.5-pro-exp-03-25',
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-preview',
+        'gemini-2.5-flash-image',
+        'gemini-2.5-pro-computer-use',
+
+        // ── Gemini 2.0 ──────────────────────────────────────────────────────────
+        'gemini-2.0-flash-lite',       // free tier terpisah
         'gemini-2.0-flash',
-        'gemini-1.5-flash-latest',
+        'gemini-2.0-flash-001',
+
+        // ── Gemini 1.5 (fallback stabil) ────────────────────────────────────────
+        'gemini-1.5-flash-8b',
+        'gemini-1.5-flash-8b-latest',
         'gemini-1.5-flash',
-        'gemini-1.5-pro-latest',
-        'gemini-1.5-pro'
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro',
+        'gemini-1.5-pro-latest'
     ];
 
     let lastError;
-    // Iterate through keys first to prioritize quota availability across all models
-    for (const key of keys) {
-        for (const model of models) {
+
+    // ✅ FIX: Model sebagai outer loop, key sebagai inner loop.
+    // Jika SEMUA key habis quota untuk model A → coba model B (bukan sebaliknya).
+    for (const model of models) {
+        let allKeysQuotaExceeded = true; // asumsi semua key habis untuk model ini
+
+        for (const key of keys) {
             try {
                 console.log(`[AI] Trying model: ${model} with key: ${key.substring(0, 10)}...`);
 
@@ -349,34 +376,47 @@ async function callGeminiAI(prompt) {
                 if (response.ok) {
                     const data = await response.json();
                     const result = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    console.log(`[AI] Success with model: ${model}`);
+                    console.log(`[AI] ✅ Success with model: ${model}`);
                     return result;
                 }
 
                 const errData = await response.json().catch(() => ({}));
-                const errMsg = errData.error?.message || response.statusText;
+                const errMsg = errData.error?.message?.split('\n')[0] || response.statusText; // ambil baris pertama saja
                 lastError = `${model}: HTTP ${response.status} - ${errMsg}`;
-                console.error(`[AI] Error with ${model}:`, lastError);
 
-                // If quota exceeded (429), break model loop to try NEXT KEY
                 if (response.status === 429) {
-                    console.warn(`[AI] Quota exceeded for key ${key.substring(0, 10)}... Trying next key.`);
-                    break;
+                    // Key ini habis quota untuk model ini, coba key berikutnya
+                    console.warn(`[AI] ⚠️ Quota exceeded: model=${model}, key=${key.substring(0, 10)}...`);
+                    continue; // coba key berikutnya
                 }
 
-                // If model not found (404), skip to next model
                 if (response.status === 404) {
-                    console.warn(`[AI] Model ${model} not found, trying next model.`);
-                    continue;
+                    // Model tidak ditemukan, skip semua key untuk model ini
+                    console.warn(`[AI] Model ${model} not found. Skipping all keys for this model.`);
+                    allKeysQuotaExceeded = false; // bukan masalah quota, model memang tidak ada
+                    break; // lanjut ke model berikutnya
                 }
+
+                // Error lain (500, dll) - anggap key ini tidak habis quota
+                console.error(`[AI] Error with ${model} (key ${key.substring(0, 10)}...):`, lastError);
+                allKeysQuotaExceeded = false;
 
             } catch (e) {
                 lastError = e.message;
                 console.error(`[AI] Fetch Error with ${model}:`, e.message);
+                allKeysQuotaExceeded = false;
             }
         }
+
+        if (allKeysQuotaExceeded) {
+            console.warn(`[AI] ⛔ Semua key habis quota untuk model ${model}. Mencoba model berikutnya...`);
+        }
     }
-    throw new Error(lastError || 'Semua API key dan model AI gagal dipanggil');
+
+    throw new Error(
+        (lastError || 'Semua model AI gagal') +
+        ' | Semua API key mungkin sudah habis kuota free-tier. Buat API key baru di https://aistudio.google.com/app/apikey'
+    );
 }
 
 app.post('/api/generate-ai', async (req, res) => {
