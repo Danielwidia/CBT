@@ -423,6 +423,12 @@
                             <button onclick="importQuestionsJSON()"
                                 class="px-4 py-2.5 bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-cyan-700 hover:shadow-lg hover:shadow-cyan-200 flex items-center gap-2"><i
                                     class="fas fa-file-import"></i> Import JSON</button>
+                            <button onclick="exportQuestionsExcel()"
+                                class="px-4 py-2.5 bg-green-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-green-700 hover:shadow-lg hover:shadow-green-200 flex items-center gap-2"><i
+                                    class="fas fa-file-excel"></i> Export Excel</button>
+                            <button onclick="importQuestionsExcel()"
+                                class="px-4 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-200 flex items-center gap-2"><i
+                                    class="fas fa-file-excel"></i> Import Excel</button>
                             <button onclick="openQuestionModal()"
                                 class="px-4 py-2.5 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700 hover:shadow-lg hover:shadow-sky-200 flex items-center gap-2"><i
                                     class="fas fa-plus"></i> Soal Baru</button>
@@ -1232,6 +1238,12 @@
                             <button onclick="importQuestionsJSON()"
                                 class="px-4 py-2 bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-cyan-700 flex items-center gap-2"><i
                                     class="fas fa-file-import"></i> Import JSON</button>
+                            <button onclick="exportQuestionsExcel()"
+                                class="px-4 py-2 bg-green-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-green-700 flex items-center gap-2"><i
+                                    class="fas fa-file-excel"></i> Export Excel</button>
+                            <button onclick="importQuestionsExcel()"
+                                class="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-teal-700 flex items-center gap-2"><i
+                                    class="fas fa-file-excel"></i> Import Excel</button>
                             <button onclick="openTeacherAiModal()"
                                 class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
                                     class="fas fa-robot"></i> Buat Soal AI</button>
@@ -4207,6 +4219,165 @@
                     }
                 };
                 reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function exportQuestionsExcel() {
+            let questionsToExport = [];
+            if (window.isTeacherMode || (currentSiswa && currentSiswa.role === 'teacher')) {
+                const fM = document.getElementById('teacher-filter-mapel')?.value || '';
+                const fR = document.getElementById('teacher-filter-rombel')?.value || '';
+                questionsToExport = db.questions.filter(q => {
+                    const qSubject = typeof q.mapel === 'string' ? q.mapel : q.mapel?.name || q.mapel;
+                    if (!teacherSubjectNames(currentSiswa).includes(qSubject)) return false;
+                    const allowed = teacherAllowedRombels(currentSiswa, qSubject);
+                    if (!allowed.includes(q.rombel)) return false;
+                    if (fM && qSubject !== fM) return false;
+                    if (fR && q.rombel !== fR) return false;
+                    return true;
+                });
+            } else {
+                const fR = document.getElementById('filter-rombel').value;
+                const fM = document.getElementById('filter-mapel').value;
+                questionsToExport = db.questions.filter(q =>
+                    (fR === 'ALL' || q.rombel === fR) && (fM === 'ALL' || q.mapel === fM)
+                );
+            }
+
+            if (questionsToExport.length === 0) {
+                alert('Tidak ada soal yang bisa diexport berdasarkan filter saat ini.');
+                return;
+            }
+
+            const flatData = questionsToExport.map(q => {
+                let opsiText = '';
+                if (q.options && Array.isArray(q.options)) {
+                    opsiText = q.options.join(' || ');
+                }
+                let kunciText = '';
+                if (q.correct !== undefined) {
+                     if (Array.isArray(q.correct)) {
+                         kunciText = q.correct.join(' || ');
+                     } else {
+                         kunciText = q.correct;
+                     }
+                }
+                
+                let matchQ = '';
+                let matchA = '';
+                if (q.questions && Array.isArray(q.questions)) matchQ = q.questions.join(' || ');
+                if (q.answers && Array.isArray(q.answers)) matchA = q.answers.join(' || ');
+
+                return {
+                    'Tipe': q.type || 'single',
+                    'Mapel': typeof q.mapel === 'string' ? q.mapel : q.mapel?.name || q.mapel,
+                    'Rombel': q.rombel || '',
+                    'Pertanyaan': q.text || '',
+                    'Opsi': opsiText,
+                    'Jawaban Benar atau Kunci': kunciText,
+                    'Pertanyaan Matching (Kiri)': matchQ,
+                    'Jawaban Matching (Kanan)': matchA,
+                    'Catatan': 'Gambar tidak dieskpor via format Excel'
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(flatData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "BankSoal");
+
+            XLSX.writeFile(workbook, `soal_cbt_export_${new Date().getTime()}.xlsx`);
+        }
+
+        function importQuestionsExcel() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xlsx, .xls';
+            
+            input.onchange = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                        
+                        let added = 0;
+                        jsonData.forEach(row => {
+                            if (row['Pertanyaan']) {
+                                let type = row['Tipe'] || 'single';
+                                
+                                let options = [];
+                                if (row['Opsi']) {
+                                    options = row['Opsi'].toString().split('||').map(s => s.trim()).filter(s => s);
+                                }
+                                
+                                let correctStr = row['Jawaban Benar atau Kunci']?.toString() || '';
+                                let correct;
+                                if (type === 'multiple' || type === 'tf' || type === 'matching') {
+                                    correct = correctStr.split('||').map(s => {
+                                        let trimmed = s.trim();
+                                        if (trimmed.toLowerCase() === 'true') return true;
+                                        if (trimmed.toLowerCase() === 'false') return false;
+                                        if (!isNaN(trimmed) && trimmed !== '') return Number(trimmed);
+                                        return trimmed;
+                                    }).filter(s => s !== '');
+                                } else {
+                                    if (!isNaN(correctStr) && correctStr !== '') {
+                                        correct = Number(correctStr);
+                                    } else {
+                                        correct = correctStr;
+                                    }
+                                }
+
+                                let matchQ = [];
+                                let matchA = [];
+                                if (row['Pertanyaan Matching (Kiri)']) {
+                                    matchQ = row['Pertanyaan Matching (Kiri)'].toString().split('||').map(s=>s.trim());
+                                }
+                                if (row['Jawaban Matching (Kanan)']) {
+                                    matchA = row['Jawaban Matching (Kanan)'].toString().split('||').map(s=>s.trim());
+                                }
+
+                                const newQ = {
+                                    type: type,
+                                    mapel: row['Mapel'] || 'General',
+                                    rombel: row['Rombel'] || '',
+                                    text: row['Pertanyaan'],
+                                };
+                                
+                                if (options.length > 0) newQ.options = options;
+                                if (correct !== undefined && correct !== '') newQ.correct = correct;
+                                if (matchQ.length > 0) newQ.questions = matchQ;
+                                if (matchA.length > 0) newQ.answers = matchA;
+                                
+                                db.questions.push(newQ);
+                                added++;
+                            }
+                        });
+
+                        if (added > 0) {
+                            save();
+                            if (window.isTeacherMode || (currentSiswa && currentSiswa.role === 'teacher')) {
+                                renderTeacherQuestions();
+                            } else {
+                                renderAdminQuestions();
+                            }
+                            updateStats();
+                            alert(`${added} soal dari Excel berhasil diimport.`);
+                        } else {
+                            alert('Tidak ada soal valid yang ditemukan dalam file Excel ini atau format kolom tidak sesuai.');
+                        }
+                    } catch (err) {
+                        alert('Gagal memproses file Excel: ' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
             };
             
             input.click();
