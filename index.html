@@ -404,43 +404,98 @@
                             <h2 class="text-2xl font-black text-slate-800">Bank Soal</h2>
                             <p class="text-slate-400 text-sm">Kelola Soal CBT</p>
                         </div>
-                        <div class="flex flex-wrap gap-3">
-                            <button onclick="openScheduleModal()"
-                                class="px-4 py-2.5 bg-purple-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-purple-700 hover:shadow-lg hover:shadow-purple-200 flex items-center gap-2"><i
-                                    class="fas fa-calendar-check"></i> Jadwal</button>
-                            <button onclick="openTimeLimitModal()"
-                                class="px-4 py-2.5 bg-orange-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-orange-700 hover:shadow-lg hover:shadow-orange-200 flex items-center gap-2"><i
-                                    class="fas fa-clock"></i> Atur Waktu</button>
-                            <button onclick="shuffleQuestions()"
-                                class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 flex items-center gap-2"><i
-                                    class="fas fa-random"></i> Acak Urutan</button>
-                            <button onclick="openImportModal()"
-                                class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 flex items-center gap-2"><i
-                                    class="fas fa-file-word"></i> Import Word</button>
-                            <button onclick="exportQuestions()"
-                                class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 flex items-center gap-2"><i
-                                    class="fas fa-file-export"></i> Export JSON</button>
-                            <button onclick="importQuestionsJSON()"
-                                class="px-4 py-2.5 bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-cyan-700 hover:shadow-lg hover:shadow-cyan-200 flex items-center gap-2"><i
-                                    class="fas fa-file-import"></i> Import JSON</button>
-                            <button onclick="exportQuestionsExcel()"
-                                class="px-4 py-2.5 bg-green-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-green-700 hover:shadow-lg hover:shadow-green-200 flex items-center gap-2"><i
-                                    class="fas fa-file-excel"></i> Export Excel</button>
-                            <button onclick="importQuestionsExcel()"
-                                class="px-4 py-2.5 bg-teal-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-teal-700 hover:shadow-lg hover:shadow-teal-200 flex items-center gap-2"><i
-                                    class="fas fa-file-excel"></i> Import Excel</button>
-                            <button onclick="openQuestionModal()"
-                                class="px-4 py-2.5 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700 hover:shadow-lg hover:shadow-sky-200 flex items-center gap-2"><i
-                                    class="fas fa-plus"></i> Soal Baru</button>
-                            <button onclick="openAiModal()"
-                                class="px-4 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 hover:shadow-lg hover:shadow-rose-200 flex items-center gap-2"><i
-                                    class="fas fa-robot"></i> Buat Soal AI</button>
-                            <button onclick="openKisiKisiModal()"
-                                class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 flex items-center gap-2"><i
-                                    class="fas fa-magic"></i> Kisi-kisi AI</button>
-                            <button onclick="deleteFilteredQuestions()"
-                                class="px-4 py-2.5 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-200 flex items-center gap-2"><i
-                                    class="fas fa-trash-alt"></i> Hapus Soal Terfilter</button>
+                        <div class="flex flex-wrap gap-3 items-end bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                            <!-- Configuration Group -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Konfigurasi</label>
+                                <div class="flex gap-2">
+                                    <button onclick="openScheduleModal()"
+                                        class="px-3 py-2 bg-purple-50 text-purple-600 border border-purple-100 rounded-xl text-xs font-bold transition-all hover:bg-purple-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-calendar-check text-[10px]"></i> Jadwal
+                                    </button>
+                                    <button onclick="openTimeLimitModal()"
+                                        class="px-3 py-2 bg-orange-50 text-orange-600 border border-orange-100 rounded-xl text-xs font-bold transition-all hover:bg-orange-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-clock text-[10px]"></i> Waktu
+                                    </button>
+                                    <button onclick="shuffleQuestions()"
+                                        class="px-3 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-xs font-bold transition-all hover:bg-indigo-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-random text-[10px]"></i> Acak
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Main Actions -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Aksi Utama</label>
+                                <div class="flex gap-2">
+                                    <button onclick="openQuestionModal()"
+                                        class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700 hover:shadow-lg hover:shadow-sky-100 flex items-center gap-2">
+                                        <i class="fas fa-plus"></i> Soal Baru
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- AI Group -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Bantuan AI</label>
+                                <div class="flex gap-2">
+                                    <button onclick="openAiModal()"
+                                        class="px-3 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-bold transition-all hover:bg-rose-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-robot text-[10px]"></i> Buat Soal AI
+                                    </button>
+                                    <button onclick="openKisiKisiModal()"
+                                        class="px-3 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-xs font-bold transition-all hover:bg-indigo-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-wand-sparkles text-[10px]"></i> Kisi-kisi AI
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Data Management Group -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Kelola Data</label>
+                                <div class="flex gap-2">
+                                    <!-- Import Dropdown -->
+                                    <div class="relative group">
+                                        <button class="px-3 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all hover:bg-slate-100 flex items-center gap-2">
+                                            <i class="fas fa-file-import text-[10px]"></i> Import <i class="fas fa-chevron-down text-[7px]"></i>
+                                        </button>
+                                        <div class="absolute left-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 hidden group-hover:block z-30 animate-fade-in">
+                                            <button onclick="openImportModal()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-t-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-word text-blue-500"></i> Word (.docx)
+                                            </button>
+                                            <button onclick="importQuestionsExcel()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-excel text-emerald-500"></i> Excel (.xlsx)
+                                            </button>
+                                            <button onclick="importQuestionsJSON()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-b-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-code text-cyan-500"></i> JSON File
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Export Dropdown -->
+                                    <div class="relative group">
+                                        <button class="px-3 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all hover:bg-slate-100 flex items-center gap-2">
+                                            <i class="fas fa-file-export text-[10px]"></i> Export <i class="fas fa-chevron-down text-[7px]"></i>
+                                        </button>
+                                        <div class="absolute left-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 hidden group-hover:block z-30 animate-fade-in">
+                                            <button onclick="exportQuestionsExcel()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-t-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-excel text-emerald-500"></i> Excel (.xlsx)
+                                            </button>
+                                            <button onclick="exportQuestions()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-b-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-code text-blue-500"></i> JSON File
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Maintenance / Danger Zone -->
+                            <div class="flex flex-col gap-1.5 flex-1 items-end">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pr-1">Pengaturan</label>
+                                <button onclick="deleteFilteredQuestions()"
+                                    class="px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-bold transition-all hover:bg-red-600 hover:text-white flex items-center gap-2">
+                                    <i class="fas fa-trash-alt text-[10px]"></i> Hapus Filtered
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -1228,34 +1283,79 @@
                             <h1 class="text-3xl font-black text-slate-800 mb-2">Bank Soal - Mata Pelajaran Saya</h1>
                             <p class="text-slate-400">Kelola soal mata pelajaran Anda</p>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="openTeacherImportModal()"
-                                class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-emerald-700 flex items-center gap-2"><i
-                                    class="fas fa-file-import"></i> Import Word</button>
-                            <button onclick="openTeacherQuestionModal()"
-                                class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700">+
-                                Soal Baru</button>
-                            <button onclick="exportQuestions()"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-blue-700 flex items-center gap-2"><i
-                                    class="fas fa-file-export"></i> Export JSON</button>
-                            <button onclick="importQuestionsJSON()"
-                                class="px-4 py-2 bg-cyan-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-cyan-700 flex items-center gap-2"><i
-                                    class="fas fa-file-import"></i> Import JSON</button>
-                            <button onclick="exportQuestionsExcel()"
-                                class="px-4 py-2 bg-green-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-green-700 flex items-center gap-2"><i
-                                    class="fas fa-file-excel"></i> Export Excel</button>
-                            <button onclick="importQuestionsExcel()"
-                                class="px-4 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-teal-700 flex items-center gap-2"><i
-                                    class="fas fa-file-excel"></i> Import Excel</button>
-                            <button onclick="openTeacherAiModal()"
-                                class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-rose-700 flex items-center gap-2"><i
-                                    class="fas fa-robot"></i> Buat Soal AI</button>
-                            <button onclick="openKisiKisiModal()"
-                                class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-indigo-700 flex items-center gap-2"><i
-                                    class="fas fa-magic"></i> Kisi-kisi AI</button>
-                            <button onclick="deleteTeacherFilteredQuestions()"
-                                class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-red-700 flex items-center gap-2"><i
-                                    class="fas fa-trash-alt"></i> Hapus Soal Terfilter</button>
+                        <div class="flex flex-wrap gap-3 items-end bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                            <!-- Main Actions -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Aksi Utama</label>
+                                <div class="flex gap-2">
+                                    <button onclick="openTeacherQuestionModal()"
+                                        class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-bold transition-all hover:bg-sky-700 hover:shadow-lg hover:shadow-sky-100 flex items-center gap-2">
+                                        <i class="fas fa-plus scale-90"></i> Soal Baru
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- AI Group -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Bantuan AI</label>
+                                <div class="flex gap-2">
+                                    <button onclick="openTeacherAiModal()"
+                                        class="px-3 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-xs font-bold transition-all hover:bg-rose-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-robot text-[10px]"></i> Buat Soal AI
+                                    </button>
+                                    <button onclick="openKisiKisiModal()"
+                                        class="px-3 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-xs font-bold transition-all hover:bg-indigo-600 hover:text-white flex items-center gap-2">
+                                        <i class="fas fa-wand-sparkles text-[10px]"></i> Kisi-kisi AI
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Data Management Group -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Kelola Data</label>
+                                <div class="flex gap-2">
+                                    <!-- Import Dropdown -->
+                                    <div class="relative group">
+                                        <button class="px-3 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all hover:bg-slate-100 flex items-center gap-2">
+                                            <i class="fas fa-file-import text-[10px]"></i> Import <i class="fas fa-chevron-down text-[7px]"></i>
+                                        </button>
+                                        <div class="absolute left-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 hidden group-hover:block z-30 animate-fade-in">
+                                            <button onclick="openTeacherImportModal()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-t-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-word text-blue-500"></i> Word (.docx)
+                                            </button>
+                                            <button onclick="importQuestionsExcel()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-excel text-emerald-500"></i> Excel (.xlsx)
+                                            </button>
+                                            <button onclick="importQuestionsJSON()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-b-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-code text-cyan-500"></i> JSON File
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Export Dropdown -->
+                                    <div class="relative group">
+                                        <button class="px-3 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all hover:bg-slate-100 flex items-center gap-2">
+                                            <i class="fas fa-file-export text-[10px]"></i> Export <i class="fas fa-chevron-down text-[7px]"></i>
+                                        </button>
+                                        <div class="absolute left-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-slate-100 hidden group-hover:block z-30 animate-fade-in">
+                                            <button onclick="exportQuestionsExcel()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-t-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-excel text-emerald-500"></i> Excel (.xlsx)
+                                            </button>
+                                            <button onclick="exportQuestions()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-b-2xl flex items-center gap-2 text-[11px] font-bold text-slate-600 transition-colors">
+                                                <i class="fas fa-file-code text-blue-500"></i> JSON File
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Maintenance / Danger Zone -->
+                            <div class="flex flex-col gap-1.5 flex-1 items-end">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest pr-1">Pengaturan</label>
+                                <button onclick="deleteTeacherFilteredQuestions()"
+                                    class="px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-bold transition-all hover:bg-red-600 hover:text-white flex items-center gap-2">
+                                    <i class="fas fa-trash-alt text-[10px]"></i> Hapus Filtered
+                                </button>
+                            </div>
                         </div>
                     </div>
 
