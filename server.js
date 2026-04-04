@@ -353,14 +353,44 @@ app.post('/api/generate-ai', async (req, res) => {
 });
 
 // ─── API: IPs ─────────────────────────────────────────────────────────────────
-app.get('/api/ips', (req, res) => {
-    const { networkInterfaces } = require('os');
-    const nets = networkInterfaces();
-    const ips = [];
-    for (const ifaces of Object.values(nets))
-        for (const iface of ifaces)
-            if (iface.family === 'IPv4' && !iface.internal) ips.push(iface.address);
     res.json(ips);
+});
+
+// ─── API: Virtual Hotspot (Windows Only) ──────────────────────────────────────
+const { exec } = require('child_process');
+let virtualHotspotStatus = 'stopped';
+
+app.get('/api/hotspot/status', (req, res) => {
+    if (process.env.VERCEL) return res.json({ status: 'not supported on cloud' });
+    res.json({ status: virtualHotspotStatus });
+});
+
+app.post('/api/hotspot/start', (req, res) => {
+    if (process.env.VERCEL) return res.status(400).json({ error: 'Virtual Hotspot is not supported on Vercel' });
+    if (process.platform !== 'win32') return res.status(400).json({ error: 'Hotspot management only supported on Windows' });
+
+    exec('netsh wlan start hostednetwork', (err, stdout, stderr) => {
+        if (err) {
+            console.error('Hotspot start error:', stderr || stdout);
+            return res.status(500).json({ error: 'Gagal mengaktifkan hotspot: ' + (stderr || stdout) });
+        }
+        virtualHotspotStatus = 'started';
+        res.json({ ok: true, status: virtualHotspotStatus, msg: stdout });
+    });
+});
+
+app.post('/api/hotspot/stop', (req, res) => {
+    if (process.env.VERCEL) return res.status(400).json({ error: 'Virtual Hotspot is not supported on Vercel' });
+    if (process.platform !== 'win32') return res.status(400).json({ error: 'Hotspot management only supported on Windows' });
+
+    exec('netsh wlan stop hostednetwork', (err, stdout, stderr) => {
+        if (err) {
+            console.error('Hotspot stop error:', stderr || stdout);
+            return res.status(500).json({ error: 'Gagal menghentikan hotspot' });
+        }
+        virtualHotspotStatus = 'stopped';
+        res.json({ ok: true, status: virtualHotspotStatus });
+    });
 });
 
 // ─── Catch-all ────────────────────────────────────────────────────────────────

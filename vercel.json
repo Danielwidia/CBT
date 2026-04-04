@@ -1,9 +1,7 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/server.js" },
-    { "handle": "filesystem" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/server.js" }
   ],
   "functions": {
     "server.js": {
