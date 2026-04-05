@@ -15,11 +15,11 @@ app.use(express.urlencoded({ limit: '500mb', extended: true }));
 const rootPath = __dirname;
 
 // ─── Environment ──────────────────────────────────────────────────────────────
-const SUPABASE_URL  = process.env.SUPABASE_URL;
-const SUPABASE_KEY  = process.env.SUPABASE_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 // Local fallback paths
-const LOCAL_DATA    = path.join(process.cwd(), 'database.json');
+const LOCAL_DATA = path.join(process.cwd(), 'database.json');
 const LOCAL_RESULTS = path.join(process.cwd(), 'results.json');
 
 const USE_SUPABASE = !!(SUPABASE_URL && SUPABASE_KEY);
@@ -37,23 +37,23 @@ const DEFAULT_DB = {
     subjects: [
         { name: 'Pendidikan Agama', locked: false },
         { name: 'Bahasa Indonesia', locked: false },
-        { name: 'Matematika',       locked: false },
-        { name: 'IPA',              locked: false },
-        { name: 'IPS',              locked: false },
-        { name: 'Bahasa Inggris',   locked: false }
+        { name: 'Matematika', locked: false },
+        { name: 'IPA', locked: false },
+        { name: 'IPS', locked: false },
+        { name: 'Bahasa Inggris', locked: false }
     ],
-    rombels:    ['Fase D (Kelas 7)', 'Fase D (Kelas 8)', 'Fase D (Kelas 9)'],
-    questions:  [],
-    students:   [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
-    results:    [],
-    schedules:  [],
+    rombels: ['Fase D (Kelas 7)', 'Fase D (Kelas 8)', 'Fase D (Kelas 9)'],
+    questions: [],
+    students: [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
+    results: [],
+    schedules: [],
     timeLimits: {}
 };
 
 // ─── Merge helpers ────────────────────────────────────────────────────────────
 function mergeResults(existing = [], incoming = []) {
     const map = new Map();
-    const key = r => `${r.studentId||''}::${r.mapel||''}::${r.rombel||''}::${r.date||''}`;
+    const key = r => `${r.studentId || ''}::${r.mapel || ''}::${r.rombel || ''}::${r.date || ''}`;
     existing.forEach(r => map.set(key(r), r));
     incoming.forEach(r => {
         const k = key(r);
@@ -81,7 +81,7 @@ async function readDB() {
             .eq('id', 1)
             .single();
         if (error && error.code !== 'PGRST116') {
-             console.error('Supabase readDB error:', error);
+            console.error('Supabase readDB error:', error);
         }
         let dbObj = data ? data.data : null;
         if (dbObj) {
@@ -120,8 +120,8 @@ async function readResults() {
             .select('data')
             .order('created_at', { ascending: false });
         if (error) {
-             console.error('Supabase readResults error:', error);
-             return [];
+            console.error('Supabase readResults error:', error);
+            return [];
         }
         return data.map(row => row.data);
     }
@@ -154,22 +154,38 @@ async function writeResults(results) {
             }
         }
 
-        // 2. Insert active results
-        // Note: For full synchronization, we only insert if not already present, 
-        // but current logic trusts admin dashboard for direct sync.
+        // 2. Sync active results (Manual Upsert logic to handle custom/composite unique constraints)
         if (active.length > 0) {
-            const records = active.map(r => ({
-                student_id: r.studentId || '',
-                mapel: r.mapel || '',
-                rombel: r.rombel || '',
-                date: r.date || new Date().toISOString(),
-                score: typeof r.score === 'string' ? parseFloat(r.score) : (r.score || 0),
-                data: r
-            }));
-            const { error } = await supabase.from('cbt_results').upsert(records, { 
-                onConflict: 'student_id,mapel,rombel,date' 
-            });
-            if (error) console.error('Supabase bulk upsert error:', error.message);
+            for (const r of active) {
+                const record = {
+                    student_id: r.studentId || '',
+                    mapel: r.mapel || '',
+                    rombel: r.rombel || '',
+                    date: r.date || new Date().toISOString(),
+                    score: typeof r.score === 'string' ? parseFloat(r.score) : (r.score || 0),
+                    data: r
+                };
+
+                // Check for existing record by identity match (to simulate upsert if index is missing)
+                const { data: existing } = await supabase
+                    .from('cbt_results')
+                    .select('id')
+                    .match({
+                        student_id: record.student_id,
+                        mapel: record.mapel,
+                        rombel: record.rombel,
+                        date: record.date
+                    })
+                    .maybeSingle();
+
+                if (existing) {
+                    const { error } = await supabase.from('cbt_results').update(record).eq('id', existing.id);
+                    if (error) console.error(`Supabase update error for student ${record.student_id}:`, error.message);
+                } else {
+                    const { error } = await supabase.from('cbt_results').insert(record);
+                    if (error) console.error(`Supabase insert error for student ${record.student_id}:`, error.message);
+                }
+            }
         }
         return;
     }
@@ -190,20 +206,43 @@ async function insertResultSingle(resultObj) {
                 });
             if (error) throw new Error('Supabase insertResultSingle(delete) error: ' + error.message);
         } else {
-            let finalScore = typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score;
-            if (isNaN(finalScore)) finalScore = 0;
-
-            const { error } = await supabase.from('cbt_results').upsert({
+            const record = {
                 student_id: resultObj.studentId || '',
                 mapel: resultObj.mapel || '',
                 rombel: resultObj.rombel || '',
                 date: resultObj.date || new Date().toISOString(),
-                score: finalScore,
+                score: typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : (resultObj.score || 0),
                 data: resultObj
-            }, {
-                onConflict: 'student_id,mapel,rombel,date'
-            });
-            if (error) throw new Error('Supabase insertResultSingle(upsert) error: ' + error.message);
+            };
+
+            // Manual Upsert Logic (Check existence first to bypass conflict spec issues)
+            const { data: existing, error: fetchError } = await supabase
+                .from('cbt_results')
+                .select('id')
+                .match({
+                    student_id: record.student_id,
+                    mapel: record.mapel,
+                    rombel: record.rombel,
+                    date: record.date
+                })
+                .maybeSingle();
+            
+            if (fetchError) throw new Error(`Supabase lookup error: ${fetchError.message}`);
+
+            if (existing) {
+                // Update existing record
+                const { error: updateError } = await supabase
+                    .from('cbt_results')
+                    .update(record)
+                    .eq('id', existing.id);
+                if (updateError) throw new Error(`Supabase update error: ${updateError.message}`);
+            } else {
+                // Insert new record
+                const { error: insertError } = await supabase
+                    .from('cbt_results')
+                    .insert(record);
+                if (insertError) throw new Error(`Supabase insert error: ${insertError.message}`);
+            }
         }
     } else {
         const merged = mergeResults(await readResults(), [resultObj]);
@@ -212,7 +251,7 @@ async function insertResultSingle(resultObj) {
 }
 
 // ─── Static Files ─────────────────────────────────────────────────────────────
-app.get('/',         (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
+app.get('/', (req, res) => res.sendFile(path.join(rootPath, 'index.html')));
 app.get('/logo.png', (req, res) => res.sendFile(path.join(rootPath, 'logo.png')));
 app.get('/administrasi_guru.html', (req, res) => res.sendFile(path.join(rootPath, 'administrasi_guru.html')));
 
@@ -229,7 +268,7 @@ app.get('/api/health', async (req, res) => {
         try {
             const { error: dbError } = await supabase.from('cbt_database').select('id').limit(1);
             if (dbError) throw dbError;
-            
+
             status.db_connection = 'OK';
             status.ok = true;
         } catch (e) {
@@ -524,12 +563,12 @@ app.post('/api/generate-ai', async (req, res) => {
         matching: 'menjodohkan'
     };
     const tipeDeskripsi = typeMap[tipe] || 'pilihan ganda';
-    
+
     const prompt = `Buatkan ${jumlah} soal bertipe ${tipeDeskripsi} untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nBalas HANYA dengan JSON array valid tanpa markdown, contoh format:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
-    
+
     try {
         let text = await callAI(prompt);
-        
+
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
         const match = text.match(/\[[\s\S]*\]/);
@@ -537,7 +576,7 @@ app.post('/api/generate-ai', async (req, res) => {
             console.error('[/api/generate-ai] AI returned no JSON array. Raw response:', text.substring(0, 200));
             return res.status(500).json({ error: 'AI tidak mengembalikan data soal yang valid. Coba lagi.' });
         }
-        
+
         const parsed = JSON.parse(match[0]);
         console.log(`[/api/generate-ai] Success: generated ${parsed.length} questions`);
         return res.json({ ok: true, questions: parsed });
@@ -550,11 +589,11 @@ app.post('/api/generate-ai', async (req, res) => {
 // ─── API: Generate Admin Doc ──────────────────────────────────────────────────
 app.post('/api/generate-admin-doc', async (req, res) => {
     const { type, mapel, fase, semester, topik, extraData } = req.body;
-    
+
     if (!mapel || !topik) {
         return res.status(400).json({ error: 'Mapel dan Topik diwajibkan' });
     }
-    
+
     let promptText = '';
     let docType = '';
 
@@ -576,17 +615,17 @@ app.post('/api/generate-admin-doc', async (req, res) => {
     } else if (type === 'soal-jawaban') {
         docType = `Soal dan Kunci Jawaban`;
         promptText = `Buatkan instrumen Soal dan Kunci Jawaban untuk mata pelajaran ${mapel} fase ${fase} materi "${topik}". Rincian jumlah dan bentuk soal yang diharapkan adalah: ${extraData?.jumlahPerBentuk || '5 soal Pilihan Ganda'}. Usahakan tipe soal HOTS (Higher Order Thinking Skills). Berikan juga pembahasan singkat untuk masing-masing soal.`;
-        
+
         if (extraData?.opsiGambar === 'placeholder') {
             promptText += `\nUntuk soal yang memerlukan ilustrasi gambar, JANGAN gunakan placeholder gambar biasa. Gunakan blok HTML berikut sebagai "Area Ilustrasi" agar terlihat profesional:\n<div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; background-color: #f8fafc; margin: 15px 0;"><i class="fas fa-image" style="font-size: 32px; color: #94a3b8; margin-bottom: 10px; display: block;"></i><p style="font-weight: bold; color: #475569; margin: 0; font-size: 14px;">[Area Ilustrasi: DESKRIPSI_GAMBAR]</p><p style="font-size: 11px; color: #94a3b8; margin-top: 5px;">(Guru dapat menyisipkan gambar spesifik di sini)</p></div>\nGanti teks DESKRIPSI_GAMBAR dengan nama/objek gambar yang relevan (misal: "Struktur Akar Tumbuhan").`;
         } else if (extraData?.opsiGambar === 'auto') {
             promptText += `\nUntuk soal yang memerlukan ilustrasi gambar, tampilkan gambar asli secara otomatis dengan memanfaatkan layanan pihak ketiga menggunakan tag HTML ini: <br><img src="https://image.pollinations.ai/prompt/[ENGLISH_VISUAL_DESCRIPTION]?width=500&height=300&nologo=true" alt="Ilustrasi AI" style="border-radius: 8px; margin: 15px 0; max-width: 100%; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0;">\nGantikan [ENGLISH_VISUAL_DESCRIPTION] dengan deskripsi visual yang sangat detail dalam BAHASA INGGRIS yang merangkum maksud soal (misalnya: "detailed educational anatomical cross section diagram of human heart on white background"). Semakin detail instruksinya, gambar akan tampil semakin akurat.`;
         }
-        
+
         if (extraData?.generateKisiKisi) {
             promptText += `\n\nPenting: Berdasarkan soal-soal yang Anda buat, buatkan juga matriks KISI-KISI UJIAN yang menjadi panduannya (Lengkap dengan Indikator Soal dan Level Kognitif) dan tampilkan matriks tersebut pada bagian PALING ATAS / AWAL dari dokumen sebelum daftar soal.`;
         }
-        
+
         if (extraData?.pisahLembar) {
             promptText += `\nPenting: Karena fitur 'Pisahkan Halaman' diaktifkan, Anda WAJIB menyisipkan tag HTML ini: <div style="page-break-before: always;"></div> tepat sebelum judul "KUNCI JAWABAN" dimulai.`;
         }
@@ -607,7 +646,7 @@ DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG meng
 
     try {
         let text = await callAI(fullPrompt);
-        
+
         // Membersihkan markdown wrapper (```html ... ```) jika AI membocorkannya
         text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
@@ -631,7 +670,7 @@ DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG meng
                     db.questions = [...db.questions, ...parsedQuestions];
                     await writeDB(db);
                     console.log(`[AI Bank Soal] Successfully saved ${parsedQuestions.length} questions to database.`);
-                    
+
                     // Hilangkan tag script dari HTML render
                     text = text.replace(match[0], '');
                 } catch (parseError) {
@@ -656,7 +695,7 @@ app.post('/api/generate-kisi-kisi', async (req, res) => {
     }
 
     const limitedQuestions = questions.slice(0, 50);
-    const questionsText = limitedQuestions.map((q, i) => `[${i+1}] ${q.text} (Type: ${q.type || 'single'})`).join('\n');
+    const questionsText = limitedQuestions.map((q, i) => `[${i + 1}] ${q.text} (Type: ${q.type || 'single'})`).join('\n');
 
     const prompt = `Analisis soal-soal berikut dan buatkan matriks Kisi-kisi Ujian untuk mata pelajaran ${mapel} kelas ${rombel}.\n` +
         `Berikan output dalam format JSON array of objects dengan properti:\n` +
@@ -672,12 +711,12 @@ app.post('/api/generate-kisi-kisi', async (req, res) => {
 
     try {
         let text = await callAI(prompt);
-        
+
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
         const match = text.match(/\[[\s\S]*\]/);
         if (!match) return res.status(500).json({ error: 'No JSON array in AI response' });
-        
+
         const parsed = JSON.parse(match[0]);
         return res.json({ ok: true, kisiKisi: parsed });
     } catch (e) {
@@ -702,7 +741,7 @@ app.use('/api', (err, req, res, next) => res.status(err.status || 500).json({ er
 
 // ─── Local Init ───────────────────────────────────────────────────────────────
 if (!USE_SUPABASE) {
-    if (!fs.existsSync(LOCAL_DATA))    fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
+    if (!fs.existsSync(LOCAL_DATA)) fs.writeFileSync(LOCAL_DATA, JSON.stringify(DEFAULT_DB, null, 2));
     if (!fs.existsSync(LOCAL_RESULTS)) fs.writeFileSync(LOCAL_RESULTS, '[]');
 }
 
