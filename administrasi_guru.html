@@ -393,6 +393,7 @@
         };
 
         let currentActiveTab = null;
+        let isGenerating = false;
 
         function previewLogoFile(event) {
             const file = event.target.files[0];
@@ -407,29 +408,35 @@
 
         function switchTab(tabId) {
             clearTimeout(inactivityTimer);
-            currentActiveTab = tabId;
             const panel = document.getElementById('config-panel');
+            const isSameTab = (currentActiveTab === tabId);
+
+            // Update UI Sidebar
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-target="${tabId}"]`).classList.add('active');
+
+            // Slide out the panel
             panel.style.width = '33.333333%';
             panel.style.minWidth = '320px';
             panel.style.opacity = '1';
             panel.style.borderRightWidth = '1px';
-            // Update UI
-            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`[data-target="${tabId}"]`).classList.add('active');
 
-            // Update Metadata Header
-            document.getElementById('header-title').innerText = config[tabId].title;
-            document.getElementById('header-desc').innerText = config[tabId].desc;
+            if (!isSameTab) {
+                currentActiveTab = tabId;
+                // Update Metadata Header
+                document.getElementById('header-title').innerText = config[tabId].title;
+                document.getElementById('header-desc').innerText = config[tabId].desc;
 
-            // Load Extra Inputs
-            document.getElementById('extra-inputs-container').innerHTML = config[tabId].extraHtml || '';
+                // Load Extra Inputs
+                document.getElementById('extra-inputs-container').innerHTML = config[tabId].extraHtml || '';
 
-            // Reset Editor State
-            document.getElementById('state-result').classList.add('hidden');
-            document.getElementById('state-loading').classList.add('hidden');
-            document.getElementById('state-empty').classList.remove('hidden');
-
-            currentActiveTab = tabId;
+                // Reset Editor State only when switching to a different document type
+                document.getElementById('state-result').classList.add('hidden');
+                document.getElementById('state-loading').classList.add('hidden');
+                document.getElementById('state-empty').classList.remove('hidden');
+            }
+            
+            resetInactivityTimer();
         }
 
         // Idle timer logic to Auto-Hide the panel
@@ -437,18 +444,17 @@
         const configPanel = document.getElementById('config-panel');
         
         function hidePanel() {
+            if (isGenerating) return; // Don't hide while processing
             configPanel.style.width = '0px';
             configPanel.style.minWidth = '0px';
             configPanel.style.opacity = '0';
             configPanel.style.borderRightWidth = '0px';
             document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
-            // Kembalikan header
-            document.getElementById('header-title').innerText = "Selamat Datang di AI Assistant";
-            document.getElementById('header-desc').innerText = "Silakan pilih menu perangkat ajar atau evaluasi di panel kiri untuk memulai.";
-            currentActiveTab = null;
+            // Preserve currentActiveTab so we can resume later
         }
 
         function resetInactivityTimer() {
+            if (isGenerating) return;
             clearTimeout(inactivityTimer);
             const progressBar = document.getElementById('inactivity-progress');
             
@@ -485,6 +491,9 @@
         // Hapus pemanggilan otomatis tab pertama agar di awal benar-benar bersembunyi
         // switchTab('atp-cp');
         async function generateWithAI() {
+            if (!currentActiveTab || isGenerating) return;
+            const activeTab = currentActiveTab; // Capture current tab
+            
             const mapel = document.getElementById('input-mapel').value.trim();
             const topic = document.getElementById('input-topik').value.trim();
             
@@ -499,6 +508,8 @@
                 document.getElementById('input-topik').focus();
                 return;
             }
+
+            isGenerating = true;
 
             // Hide Empty & Result, Show Loading
             document.getElementById('state-empty').classList.add('hidden');
@@ -524,14 +535,14 @@
             try {
                 // Siapkan extraData dari form spesifik
                 const extraData = {};
-                if (currentActiveTab === 'modul-ajar') {
+                if (activeTab === 'modul-ajar') {
                     extraData.waktu = document.getElementById('input-waktu')?.value || '2 x 40 Menit';
                     extraData.model = document.getElementById('input-model')?.value || 'Problem Based Learning';
-                } else if (currentActiveTab === 'prota-promes') {
+                } else if (activeTab === 'prota-promes') {
                     extraData.pekan = document.getElementById('input-pekan')?.value || '18';
-                } else if (currentActiveTab === 'kisi-kisi') {
+                } else if (activeTab === 'kisi-kisi') {
                     extraData.jenis = document.getElementById('input-jenis-ujian')?.value || 'Soal Ujian Tertulis';
-                } else if (currentActiveTab === 'soal-jawaban') {
+                } else if (activeTab === 'soal-jawaban') {
                     const pg = parseInt(document.getElementById('jml-pg')?.value) || 0;
                     const pgk = parseInt(document.getElementById('jml-pgk')?.value) || 0;
                     const esai = parseInt(document.getElementById('jml-esai')?.value) || 0;
@@ -554,7 +565,7 @@
                 }
 
                 const payload = {
-                    type: currentActiveTab,
+                    type: activeTab,
                     mapel: mapel,
                     fase: document.getElementById('input-fase').value,
                     semester: document.getElementById('input-semester').value,
@@ -587,7 +598,7 @@
                         <img src="${logoSrc}" style="width: 80px; height: 80px; object-fit: contain;">
                         <div>
                             <h2 style="margin:0; text-transform: uppercase; font-size: 1.5rem; font-weight: bold;">${namaSekolah}</h2>
-                            <h3 style="margin:5px 0 0 0; text-transform: uppercase; color: #475569; font-size: 1.1rem;">${config[currentActiveTab].title}</h3>
+                            <h3 style="margin:5px 0 0 0; text-transform: uppercase; color: #475569; font-size: 1.1rem;">${config[activeTab].title}</h3>
                         </div>
                     </div>
                 </div>
@@ -603,11 +614,16 @@
                     showToast('Dokumen Administrasi Berhasil Disusun!');
                 }
                 
+                isGenerating = false;
+                resetInactivityTimer();
+                
             } catch (e) {
+                isGenerating = false;
                 clearInterval(textInterval);
                 document.getElementById('state-loading').classList.add('hidden');
                 document.getElementById('state-empty').classList.remove('hidden');
                 showToast('Gagal memproses AI: ' + e.message, true);
+                resetInactivityTimer();
             }
         }
 
@@ -624,7 +640,7 @@
 
         function downloadWord() {
             const content = document.getElementById('editor-content').innerHTML;
-            if(!content.trim()) return showToast('Tidak ada konten untuk didownload', true);
+            if(!content.trim() || !currentActiveTab) return showToast('Tidak ada konten untuk didownload', true);
             showToast('Menyiapkan dokumen Word...');
             
             const header = `
