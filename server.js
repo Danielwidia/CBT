@@ -62,6 +62,16 @@ function mergeResults(existing = [], incoming = []) {
     return Array.from(map.values());
 }
 
+function normalizeQuestionType(type = '') {
+    const t = type.toLowerCase().trim();
+    if (['single', 'pilihan_ganda', 'pg', 'multiple_choice'].includes(t)) return 'single';
+    if (['multiple', 'pg_kompleks', 'complex', 'checkbox'].includes(t)) return 'multiple';
+    if (['text', 'uraian', 'isian', 'essay', 'short_answer'].includes(t)) return 'text';
+    if (['tf', 'boolean', 'benar_salah', 'true_false', 'bs'].includes(t)) return 'tf';
+    if (['matching', 'jodohkan', 'pasangkan', 'pairing', 'match'].includes(t)) return 'matching';
+    return 'single';
+}
+
 // ─── Data Layer (Supabase Native + Fallback) ──────────────────────────────────
 async function readDB() {
     if (USE_SUPABASE) {
@@ -577,7 +587,7 @@ app.post('/api/generate-admin-doc', async (req, res) => {
         }
 
         if (extraData?.simpanBankSoal) {
-            promptText += `\nSANGAT PENTING (INSTRUKSI DATABASE): Pada bagian PALING AKHIR dokumen dokumen HTML Anda, sematkan array JSON data soal-soal tersebut HANYA di dalam tag ini persis: <script id="ai-json-data" type="application/json"> [ARRAY_JSON] </script>. ARRAY_JSON adalah format pertanyaan seperti ini: { "text": "Pertanyaan?", "options": ["A","B","C","D"], "correct": 0, "type": "single", "mapel": "${mapel}", "rombel": "${fase}" }. Opsi array kosongkan untuk tipe Isian/Benar-Salah/Menjodohkan. Correct dapat berupa indeks jawaban (untuk PG) atau string kunci jawaban.`;
+            promptText += `\nSANGAT PENTING (INSTRUKSI DATABASE): Pada bagian PALING AKHIR dokumen dokumen HTML Anda, sematkan array JSON data soal-soal tersebut HANYA di dalam tag ini persis: <script id="ai-json-data" type="application/json"> [ARRAY_JSON] </script>. ARRAY_JSON adalah format pertanyaan seperti ini: { "text": "Pertanyaan?", "options": ["A","B","C","D"], "correct": 0, "type": "single", "mapel": "${mapel}", "rombel": "${fase}" }.\nWAJIB GUNAKAN TYPE BERIKUT: "single" (PG), "multiple" (PG Kompleks), "text" (Uraian), "tf" (Benar/Salah), "matching" (Menjodohkan). Opsi array kosongkan untuk tipe Isian/Benar-Salah/Menjodohkan. Correct dapat berupa indeks jawaban (untuk PG) atau string kunci jawaban.`;
         }
     } else {
         return res.status(400).json({ error: 'Tipe dokumen tidak valid' });
@@ -611,7 +621,7 @@ DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG meng
                         ...q,
                         mapel: q.mapel || mapel,
                         rombel: q.rombel || fase,
-                        type: q.type || 'single'
+                        type: normalizeQuestionType(q.type)
                     }));
                     db.questions = [...db.questions, ...parsedQuestions];
                     await writeDB(db);
