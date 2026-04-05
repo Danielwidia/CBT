@@ -190,15 +190,18 @@ async function insertResultSingle(resultObj) {
                 });
             if (error) throw new Error('Supabase insertResultSingle(delete) error: ' + error.message);
         } else {
+            let finalScore = typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score;
+            if (isNaN(finalScore)) finalScore = 0;
+
             const { error } = await supabase.from('cbt_results').upsert({
                 student_id: resultObj.studentId || '',
                 mapel: resultObj.mapel || '',
                 rombel: resultObj.rombel || '',
                 date: resultObj.date || new Date().toISOString(),
-                score: typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score,
+                score: finalScore,
                 data: resultObj
             }, {
-                onConflict: 'student_id,mapel,rombel,date'
+                onConflict: 'student_id,mapel,rombel'
             });
             if (error) throw new Error('Supabase insertResultSingle(upsert) error: ' + error.message);
         }
