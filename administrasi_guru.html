@@ -151,7 +151,9 @@
         <div class="flex-1 flex overflow-hidden">
             
             <!-- Left Panel: Input Configuration (Hidden by Default with animation) -->
-            <div id="config-panel" class="bg-white border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 transition-all duration-500 ease-out overflow-hidden" style="width: 0px; min-width: 0px; opacity: 0; border-right-width: 0px;">
+            <div id="config-panel" class="bg-white border-slate-200 flex flex-col shadow-[4px_0_24px,rgba(0,0,0,0.02)] z-10 transition-all duration-500 ease-out overflow-hidden relative" style="width: 0px; min-width: 0px; opacity: 0; border-right-width: 0px;">
+                <!-- Activity Progress Bar -->
+                <div id="inactivity-progress" class="absolute bottom-0 left-0 h-1 bg-blue-500/30 transition-all duration-1000 ease-linear" style="width: 0%"></div>
                 <div class="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-5">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -404,6 +406,7 @@
         }
 
         function switchTab(tabId) {
+            clearTimeout(inactivityTimer);
             currentActiveTab = tabId;
             const panel = document.getElementById('config-panel');
             panel.style.width = '33.333333%';
@@ -429,9 +432,58 @@
             currentActiveTab = tabId;
         }
 
-        // Initialize first tab extra inputs securely just in case
-        switchTab('atp-cp');
+        // Idle timer logic to Auto-Hide the panel
+        let inactivityTimer;
+        const configPanel = document.getElementById('config-panel');
+        
+        function hidePanel() {
+            configPanel.style.width = '0px';
+            configPanel.style.minWidth = '0px';
+            configPanel.style.opacity = '0';
+            configPanel.style.borderRightWidth = '0px';
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            // Kembalikan header
+            document.getElementById('header-title').innerText = "Selamat Datang di AI Assistant";
+            document.getElementById('header-desc').innerText = "Silakan pilih menu perangkat ajar atau evaluasi di panel kiri untuk memulai.";
+            currentActiveTab = null;
+        }
 
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            const progressBar = document.getElementById('inactivity-progress');
+            
+            if(currentActiveTab) {
+                // Reset progress bar visual
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '100%';
+                
+                // Force reflow
+                progressBar.offsetHeight;
+                
+                // Start countdown animation
+                progressBar.style.transition = 'width 10s linear';
+                progressBar.style.width = '0%';
+
+                inactivityTimer = setTimeout(() => {
+                    hidePanel();
+                }, 10000); // 10 detik tidak ada aktivitas
+            } else {
+                progressBar.style.width = '0%';
+            }
+        }
+
+        // Attach listeners for inactivity tracking globally or on the panel
+        configPanel.addEventListener('mousemove', resetInactivityTimer);
+        configPanel.addEventListener('keydown', resetInactivityTimer);
+        configPanel.addEventListener('click', resetInactivityTimer);
+        document.getElementById('nav-menu').addEventListener('mousemove', resetInactivityTimer);
+        configPanel.addEventListener('mouseleave', () => {
+            // Ketika mouse keluar dari panel, pastikan timer mulai menghitung
+            resetInactivityTimer();
+        });
+
+        // Hapus pemanggilan otomatis tab pertama agar di awal benar-benar bersembunyi
+        // switchTab('atp-cp');
         async function generateWithAI() {
             const mapel = document.getElementById('input-mapel').value.trim();
             const topic = document.getElementById('input-topik').value.trim();
@@ -545,6 +597,12 @@
                 document.getElementById('state-result').classList.remove('hidden');
                 document.getElementById('editor-content').innerHTML = kopHTML + data.html;
                 
+                if (data.savedToBankSoal) {
+                    showToast('Dokumen Berhasil! Soal otomatis tersimpan ke Bank Soal.');
+                } else {
+                    showToast('Dokumen Administrasi Berhasil Disusun!');
+                }
+                
             } catch (e) {
                 clearInterval(textInterval);
                 document.getElementById('state-loading').classList.add('hidden');
@@ -569,7 +627,18 @@
             if(!content.trim()) return showToast('Tidak ada konten untuk didownload', true);
             showToast('Menyiapkan dokumen Word...');
             
-            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Dokumen Administrasi Guru</title></head><body>";
+            const header = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <style>
+                        body { font-family: 'Calibri', sans-serif; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                        th, td { border: 1px solid black; padding: 5px; }
+                        .page-break { page-break-before: always; }
+                    </style>
+                </head>
+                <body>`;
             const footer = "</body></html>";
             const sourceHTML = header + content + footer;
             
@@ -616,14 +685,24 @@
                     <title>Cetak Dokumen - E-Kinerja Guru SMP Kristen Dorkas</title>
                     <style>
                         body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #000; padding: 20px; }
-                        h1, h2, h3 { color: #000; margin-top: 1em; margin-bottom: 0.5em; }
+                        h1, h2, h3 { color: #000; margin-top: 1.2em; margin-bottom: 0.6em; }
                         h2 { border-bottom: 2px solid #000; padding-bottom: 5px; }
-                        p, ul, ol { margin-bottom: 15px; }
-                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-                        th { background-color: #f0f0f0; }
+                        p, ul, ol { margin-bottom: 12px; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: auto; }
+                        th, td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 11pt; }
+                        th { background-color: #f3f4f6; -webkit-print-color-adjust: exact; }
+                        
+                        /* Support for Page Break from AI */
+                        div[style*="page-break-before"] {
+                            page-break-before: always !important;
+                            display: block;
+                        }
+
                         @media print {
-                            @page { margin: 2cm; }
+                            body { padding: 0.5cm; }
+                            @page { margin: 2cm; size: A4; }
+                            button, .no-print { display: none !important; }
+                            .print-break { page-break-before: always; }
                         }
                     </style>
                 </head>
