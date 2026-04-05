@@ -410,12 +410,19 @@
             clearTimeout(inactivityTimer);
             const panel = document.getElementById('config-panel');
             const isSameTab = (currentActiveTab === tabId);
+            const isPanelOpen = (panel.style.width !== '0px' && panel.style.width !== '');
 
-            // Update UI Sidebar
+            // Toggle OFF: Jika mengklik tab yang sama saat panel sedang terbuka
+            if (isSameTab && isPanelOpen) {
+                hidePanel();
+                return;
+            }
+
+            // Update UI Sidebar highlight
             document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-target="${tabId}"]`).classList.add('active');
 
-            // Slide out the panel
+            // Slide out the panel (Tampilkan)
             panel.style.width = '33.333333%';
             panel.style.minWidth = '320px';
             panel.style.opacity = '1';
@@ -430,7 +437,7 @@
                 // Load Extra Inputs
                 document.getElementById('extra-inputs-container').innerHTML = config[tabId].extraHtml || '';
 
-                // Reset Editor State only when switching to a different document type
+                // Reset Editor State hanya jika berganti tipe dokumen
                 document.getElementById('state-result').classList.add('hidden');
                 document.getElementById('state-loading').classList.add('hidden');
                 document.getElementById('state-empty').classList.remove('hidden');
@@ -450,6 +457,11 @@
             configPanel.style.opacity = '0';
             configPanel.style.borderRightWidth = '0px';
             document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            
+            // Reset progress bar visual
+            const progressBar = document.getElementById('inactivity-progress');
+            if (progressBar) progressBar.style.width = '0%';
+            
             // Preserve currentActiveTab so we can resume later
         }
 
