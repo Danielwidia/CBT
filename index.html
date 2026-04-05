@@ -6164,14 +6164,22 @@
                     correctCount += selectedCorrect;
                 } else if (qType === 'matching') {
                     const ansArr = Array.isArray(ans) ? ans : [];
-                    const shuffled = Array.isArray(q._shuffledAnswers) ? q._shuffledAnswers : q.answers;
-                    q.questions.forEach((_, qi) => {
-                        totalItems++;
-                        const selectedIdx = ansArr[qi];
-                        if (selectedIdx != null && shuffled[selectedIdx] === q.correct[qi]) {
-                            correctCount++;
-                        }
-                    });
+                    const shuffled = Array.isArray(q._shuffledAnswers) ? q._shuffledAnswers : (q.answers || []);
+                    
+                    // SAFETY: Ensure both prompt questions and correct answers exist
+                    if (Array.isArray(q.questions) && Array.isArray(q.correct)) {
+                        q.questions.forEach((_, qi) => {
+                            totalItems++;
+                            const selectedIdx = ansArr[qi];
+                            if (selectedIdx != null && shuffled[selectedIdx] === q.correct[qi]) {
+                                correctCount++;
+                            }
+                        });
+                    } else {
+                        console.warn(`[SCORE] SKIPPING matching question ${i} due to missing questions/correct data`);
+                        // Still increment totalItems by 1 to represent the question exists
+                        totalItems += 1;
+                    }
                 } else {
                     // non-TF and non-multiple questions still contribute satu item
                     totalItems++;
