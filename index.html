@@ -2080,7 +2080,15 @@
         }
 
         async function init() {
-            migrateRombels();
+            const loginBtn = document.getElementById('login-btn');
+            const loginBtnText = loginBtn ? loginBtn.innerHTML : '';
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.style.opacity = '0.7';
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading Data...';
+            }
+
+            // Move migrateRombels() to run AFTER database is actually loaded.
             // SYNC: Fix any data consistency issues in results
             if (Array.isArray(db.results)) {
                 db.results.forEach((result, idx) => {
@@ -2115,144 +2123,18 @@
                 try {
                     const session = JSON.parse(savedSession);
                     currentSiswa = session.user;
-                    if (currentSiswa && currentSiswa.role === 'student') {
-                        const stu = db.students.find(s => s.id === currentSiswa.id);
-                        if (stu) { stu.isOnline = true; save(); }
-                    }
-
-                    // load local copy as baseline (best effort)
-                    try {
-                        const parsed = await loadLocalDb();
-                        if (parsed && typeof parsed === 'object') {
-                            db = normalizeDb(parsed);
-                            console.log('Database loaded from local storage (IDB/localStorage)');
-                        }
-                    } catch (e) {
-                        console.warn('Failed to load baseline from local store:', e.message);
-                    }
-
-                    // Then attempt server fetch; only override/merge if it looks sane
-                    try {
-                        console.log('Loading database from server/fallback...');
-                        let res = await fetch(getApiBaseUrl() + '/api/db');
-
-                        // FALLBACK: If API not found (e.g. GitHub Pages), try static database.json
-                        if (!res.ok && (res.status === 404 || res.status === 0)) {
-                            console.warn('API not found, trying static database.json fallback...');
-                            res = await fetch('database.json');
-                            window.isStaticMode = true;
-                            showStaticModeWarning();
-                        }
-
-                        if (res.ok) {
-                            const serverDb = await res.json();
-                            if (serverDb && typeof serverDb === 'object' && serverDb.students) {
-                                // decide whether to keep local copy or use server
-                                const localCount = Array.isArray(db.results) ? db.results.length : 0;
-                                const serverCount = Array.isArray(serverDb.results) ? serverDb.results.length : 0;
-
-                                if (serverCount < localCount) {
-                                    console.warn('Server DB has fewer results than local copy; preserving local results.');
-                                    // merge any missing entries from server into local
-                                    db.results = mergeResults(db.results, serverDb.results);
-                                } else if (serverCount > localCount) {
-                                    console.log('Server DB has more results; merging with local copy');
-                                    db.results = mergeResults(db.results, serverDb.results);
-                                } else {
-                                    // counts equal, just merge to dedupe
-                                    db.results = mergeResults(db.results, serverDb.results);
-                                }
-                                // also merge other top-level keys in case server had updates
-                                db = normalizeDb({ ...serverDb, results: db.results });
-                                // write the merged database to local stores so that a
-                                // reload immediately afterwards retains this state
-                                try {
-                                    await saveLocalDb();
-                                } catch (e) {
-                                    console.warn('Unable to cache server DB locally:', e.message || e);
-                                }
-                                console.log('Database loaded/merged from server');
-                            }
-                        }
-
-                        // Also fetch results separately if USE_SUPABASE is likely on or to be safe
-                        try {
-                            const rRes = await fetch(getApiBaseUrl() + '/api/results');
-                            if (rRes.ok) {
-                                const serverResults = await rRes.json();
-                                if (Array.isArray(serverResults) && serverResults.length > 0) {
-                                    db.results = mergeResults(db.results, serverResults);
-                                    console.log(`[INIT-SESSION] Loaded ${serverResults.length} results from server.`);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('Could not load /api/results on init session:', e.message);
-                        }
-                    } catch (err) {
-                        console.warn('Failed to load from server:', err.message);
-                    }
-
-                    // Verify user still exists in database
-                    const userExists = db.students.find(x => x.id === currentSiswa.id && x.password === currentSiswa.password);
-                    if (!userExists) {
-                        console.warn('User from session not found in database, logging out');
-                        clearSession();
-                        showLoginScreen();
-                        updateStats();
-                        return;
-                    }
-
-                    // Restore UI based on user role
-                    document.getElementById('login-screen').classList.add('hidden');
-                    closeModals();
-
-                    if (currentSiswa.role === 'admin') {
-                        document.getElementById('admin-dashboard').classList.remove('hidden');
-                        document.getElementById('student-dashboard').classList.add('hidden');
-                        document.getElementById('teacher-dashboard').classList.add('hidden');
-                        showAdminSection('overview');
-                        console.log('Admin session restored');
-                    } else if (currentSiswa.role === 'student') {
-                        document.getElementById('student-dashboard').classList.remove('hidden');
-                        document.getElementById('admin-dashboard').classList.add('hidden');
-                        document.getElementById('teacher-dashboard').classList.add('hidden');
-                        document.getElementById('st-info-label').innerText = `${currentSiswa.name} | ${currentSiswa.rombel}`;
-                        renderStudentExamList();
-                        console.log('Student session restored');
-                    } else if (currentSiswa.role === 'teacher') {
-                        document.getElementById('teacher-dashboard').classList.remove('hidden');
-                        document.getElementById('admin-dashboard').classList.add('hidden');
-                        document.getElementById('student-dashboard').classList.add('hidden');
-                        document.getElementById('teacher-info-label').innerText = `${currentSiswa.name} | Guru ${formatTeacherSubjects(currentSiswa)}`;
-                        renderTeacherQuestions();
-                        console.log('Teacher session restored');
-                    }
-                    migrateTeacherData();
-                    updateStats();
-                    return;
-                } catch (err) {
-                    console.warn('Failed to restore session:', err.message);
-                    clearSession();
+                } catch (e) {
+                    console.warn('Invalid session format');
                 }
             }
 
-            // No valid session, show login screen
-            showLoginScreen();
-
-            // Ensure login screen is visible and modals are closed
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('admin-dashboard').classList.add('hidden');
-            document.getElementById('student-dashboard').classList.add('hidden');
-            closeModals();
-
-            // Try to load from server first
+            // Then fetch DB
             try {
-                console.log('Loading database from server/fallback...');
-                let res = await fetch(getApiBaseUrl() + '/api/db');
+                const parsed = await loadLocalDb();
+                if (parsed) db = normalizeDb(parsed);
 
-                // FALLBACK: If API not found (e.g. GitHub Pages), try static database.json
+                let res = await fetch(getApiBaseUrl() + '/api/db');
                 if (!res.ok && (res.status === 404 || res.status === 0)) {
-                    console.warn('API not found, trying static database.json fallback...');
                     res = await fetch('database.json');
                     window.isStaticMode = true;
                     showStaticModeWarning();
@@ -2260,63 +2142,74 @@
 
                 if (res.ok) {
                     const serverDb = await res.json();
-                    if (serverDb && typeof serverDb === 'object' && serverDb.students) {
-                        // we already have db maybe loaded from previous attempt (should be default)
-                        const localCount = Array.isArray(db.results) ? db.results.length : 0;
-                        const serverCount = Array.isArray(serverDb.results) ? serverDb.results.length : 0;
-                        if (serverCount < localCount) {
-                            console.warn('Server DB has fewer results than local copy; keeping local results.');
-                            db.results = mergeResults(db.results, serverDb.results);
-                            db = normalizeDb({ ...serverDb, results: db.results });
-                        } else if (serverCount > localCount) {
-                            console.log('Server DB has more results; merging with local copy');
-                            db.results = mergeResults(db.results, serverDb.results);
-                            db = normalizeDb({ ...serverDb, results: db.results });
-                        } else {
-                            db.results = mergeResults(db.results, serverDb.results);
-                            db = normalizeDb({ ...serverDb, results: db.results });
-                        }
-                        console.log('Database loaded/merged from server');
-
-                        // Also fetch results separately (stored in /api/results, not /api/db)
-                        try {
-                            const rRes = await fetch(getApiBaseUrl() + '/api/results');
-                            if (rRes.ok) {
-                                const serverResults = await rRes.json();
-                                if (Array.isArray(serverResults) && serverResults.length > 0) {
-                                    db.results = mergeResults(db.results, serverResults);
-                                    console.log(`[INIT] Loaded ${serverResults.length} results from server.`);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('Could not load /api/results on init:', e.message);
-                        }
-
-                        updateStats();
-                        return;
+                    if (serverDb && serverDb.students) {
+                        db = normalizeDb(serverDb);
+                        console.log('Database synced with server:', db.students.length, 'students');
                     }
                 }
             } catch (err) {
-                console.warn('Failed to load from server:', err.message);
-                // ignore and fallback to localStorage
+                console.error('Initialization error:', err);
             }
 
-            // Fallback: attempt to load from local store (IDB preferred)
-            try {
-                const saved = await loadLocalDb();
-                if (saved) {
-                    db = saved;
-                    console.log('Database loaded from local store');
-                    migrateTeacherData();
-                } else {
-                    console.log('Using default database');
-                    save();
-                }
-            } catch (e) {
-                console.error('Error loading database:', e);
+            // NOW run migration on the final loaded data
+            migrateRombels();
+
+            // Re-enable login
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.style.opacity = '1';
+                loginBtn.innerHTML = loginBtnText;
             }
-            migrateTeacherData();
-            updateStats();
+
+            // Set student status if session present
+            if (currentSiswa && currentSiswa.role === 'student') {
+                const stu = db.students.find(s => s.id === currentSiswa.id);
+                if (stu) { stu.isOnline = true; save(); }
+            }
+
+            // Verify user still exists in database
+            if (currentSiswa) {
+                const userExists = db.students.find(x => x.id === currentSiswa.id && x.password === currentSiswa.password);
+                if (!userExists) {
+                    console.warn('User from session not found in database, logging out');
+                    clearSession();
+                    showLoginScreen();
+                    updateStats();
+                    return;
+                }
+
+                // Restore UI based on user role
+                document.getElementById('login-screen').classList.add('hidden');
+                closeModals();
+
+                if (currentSiswa.role === 'admin') {
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                    document.getElementById('student-dashboard').classList.add('hidden');
+                    document.getElementById('teacher-dashboard').classList.add('hidden');
+                    showAdminSection('overview');
+                    console.log('Admin session restored');
+                } else if (currentSiswa.role === 'student') {
+                    document.getElementById('student-dashboard').classList.remove('hidden');
+                    document.getElementById('admin-dashboard').classList.add('hidden');
+                    document.getElementById('teacher-dashboard').classList.add('hidden');
+                    document.getElementById('st-info-label').innerText = `${currentSiswa.name} | ${currentSiswa.rombel}`;
+                    renderStudentExamList();
+                    console.log('Student session restored');
+                } else if (currentSiswa.role === 'teacher') {
+                    document.getElementById('teacher-dashboard').classList.remove('hidden');
+                    document.getElementById('admin-dashboard').classList.add('hidden');
+                    document.getElementById('student-dashboard').classList.add('hidden');
+                    document.getElementById('teacher-info-label').innerText = `${currentSiswa.name} | Guru ${formatTeacherSubjects(currentSiswa)}`;
+                    renderTeacherQuestions();
+                    console.log('Teacher session restored');
+                }
+                migrateTeacherData();
+                updateStats();
+                return;
+            }
+
+            // No valid session, show login screen
+            showLoginScreen();
         }
 
         function showLoginScreen() {
@@ -2620,12 +2513,7 @@
             const u = document.getElementById('username').value.trim().toUpperCase();
             const p = document.getElementById('password').value.trim();
 
-            console.log('Login attempt - ID:', u, 'Role:', window.loginType);
-            console.log('Total students in db:', db.students?.length || 0);
-            console.log('Students:', db.students?.map(s => ({ id: s.id, role: s.role })));
-
             if (!db.students) {
-                console.error('Database students not loaded!');
                 alert('Database belum siap. Silakan refresh halaman.');
                 return;
             }
@@ -2641,50 +2529,52 @@
                     x.password === p &&
                     x.role !== 'admin'
                 );
-                if (user) {
-                    console.log('User found by name search:', user.name, 'ID:', user.id);
-                }
             }
 
-            console.log('User found:', !!user, user);
-
             if (user) {
-                if (window.loginType === 'admin' && user.role === 'admin') {
-                    currentSiswa = user;
-                    saveSession();
-                    closeModals();
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('admin-dashboard').classList.remove('hidden');
-                    showAdminSection('overview');
-                    console.log('Admin login successful');
-                } else if (window.loginType === 'student' && user.role === 'student') {
-                    currentSiswa = user;
-                    // student online flag set earlier
-                    updateCompletionCharts();
-                    saveSession();
-                    closeModals();
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('student-dashboard').classList.remove('hidden');
-                    document.getElementById('st-info-label').innerText = `${user.name} | ${user.rombel}`;
-                    renderStudentExamList();
-                    showStudentInstructionModal();
-                    console.log('Student login successful');
-                } else if (window.loginType === 'teacher' && user.role === 'teacher') {
-                    currentSiswa = user;
-                    saveSession();
-                    closeModals();
-                    document.getElementById('login-screen').classList.add('hidden');
-                    document.getElementById('teacher-dashboard').classList.remove('hidden');
-                    document.getElementById('teacher-info-label').innerText = `${user.name} | Guru ${formatTeacherSubjects(user)}`;
-                    renderTeacherQuestions();
-                    console.log('Teacher login successful');
+                const roleMatch = (window.loginType === user.role);
+                console.log('User found:', user.name, '| Role matches:', roleMatch);
+
+                if (roleMatch) {
+                    if (user.role === 'admin') {
+                        currentSiswa = user;
+                        saveSession();
+                        closeModals();
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('admin-dashboard').classList.remove('hidden');
+                        showAdminSection('overview');
+                    } else if (user.role === 'student') {
+                        currentSiswa = user;
+                        updateCompletionCharts();
+                        saveSession();
+                        closeModals();
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('student-dashboard').classList.remove('hidden');
+                        document.getElementById('st-info-label').innerText = `${user.name} | ${user.rombel}`;
+                        renderStudentExamList();
+                        showStudentInstructionModal();
+                    } else if (user.role === 'teacher') {
+                        currentSiswa = user;
+                        saveSession();
+                        closeModals();
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('teacher-dashboard').classList.remove('hidden');
+                        document.getElementById('teacher-info-label').innerText = `${user.name} | Guru ${formatTeacherSubjects(user)}`;
+                        renderTeacherQuestions();
+                    }
+                    showToast(`Login berhasil! Selamat datang, ${user.name}`, 'success');
                 } else {
-                    console.log('Role mismatch - loginType:', window.loginType, 'user.role:', user.role);
-                    showError();
+                    console.log('Role mismatch - Expected:', window.loginType, 'Actual:', user.role);
+                    showError(`Akun ini terdaftar sebagai ${user.role}. Silakan klik menu login yang sesuai.`);
                 }
             } else {
-                console.log('No matching user found');
-                showError();
+                // Determine if ID exists but password fails, or ID missing
+                const idMatch = db.students.find(x => x.id.toUpperCase() === u);
+                if (idMatch) {
+                    showError('ID ditemukan, tapi password salah. Coba lagi.');
+                } else {
+                    showError('ID atau Nama tidak ditemukan. Pastikan data sudah tersimpan di Admin.');
+                }
             }
         }
 
@@ -2694,12 +2584,11 @@
             if (btn) btn.addEventListener('click', handleLogin);
         });
 
-        function showError() {
+        function showError(customMsg) {
             const err = document.getElementById('login-error');
-            const roleMsg = window.loginType === 'teacher' ? 'Password default: escrido123' : 'Password: escrido';
-            err.innerHTML = `ID, nama, atau password salah! Pastikan:<br>• ID format: ${window.loginType === 'teacher' ? 'GURU-XXXX' : 'DRKS-XXXX'}<br>• ${roleMsg}<br>`;
+            const defaultRoleMsg = window.loginType === 'teacher' ? 'Password default: escrido123' : 'Password default: escrido';
+            err.innerHTML = (customMsg || `ID atau password salah!`) + `<br><span class="text-[10px] opacity-70 mt-1 block tracking-tight">• ${defaultRoleMsg}</span>`;
             err.classList.remove('hidden');
-            setTimeout(() => err.classList.add('hidden'), 5000);
         }
 
         function logout() {
