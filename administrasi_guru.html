@@ -174,10 +174,10 @@
 
                     <div>
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mata Pelajaran</label>
-                        <input type="text" list="mapel-list" id="input-mapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
-                        <datalist id="mapel-list">
+                        <select id="input-mapel" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
+                            <option value="">--Pilih Mata Pelajaran--</option>
                             <!-- Populated from database -->
-                        </datalist>
+                        </select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -385,21 +385,24 @@
         let isGenerating = false;
         let db = null;
 
-        const API_URL = localStorage.getItem('remote_server_url') || '';
+        // Correct key from index.html: "EXAM_DORKAS_REMOTE_SERVER_URL"
+        const API_URL = localStorage.getItem('EXAM_DORKAS_REMOTE_SERVER_URL') || '';
 
         async function loadAdminData() {
+            console.log('Fetching admin data from:', API_URL || '(local)');
             try {
                 const response = await fetch(API_URL + '/api/db');
-                if (!response.ok) throw new Error('Failed to fetch DB');
+                if (!response.ok) throw new Error('Failed to fetch DB from ' + API_URL + '/api/db');
                 db = await response.json();
 
                 // Populate Mapel
-                const mapelList = document.getElementById('mapel-list');
-                if (mapelList && db.subjects) {
-                    mapelList.innerHTML = db.subjects.map(s => {
-                        const name = typeof s === 'string' ? s : s.name;
-                        return `<option value="${name}">`;
-                    }).join('');
+                const mapelSelect = document.getElementById('input-mapel');
+                if (mapelSelect && db.subjects) {
+                    mapelSelect.innerHTML = '<option value="">--Pilih Mata Pelajaran--</option>' + 
+                        db.subjects.map(s => {
+                            const name = typeof s === 'string' ? s : s.name;
+                            return `<option value="${name}">${name}</option>`;
+                        }).join('');
                 }
 
                 // Populate Rombels / Fase
@@ -409,12 +412,17 @@
                         db.rombels.map(r => `<option value="${r}">${r}</option>`).join('');
                 }
                 
-                console.log('Admin data loaded successfully');
+                console.log('Admin data loaded successfully:', db.subjects.length, 'subjects found');
             } catch (err) {
-                console.warn('Could not load admin data from server:', err);
-                // Fallback to static options if server fails
+                console.error('Could not load admin data from server:', err);
+                
+                // Fallback for students view if server is unreachable
+                const mapelSelect = document.getElementById('input-mapel');
+                if (mapelSelect && !mapelSelect.options.length > 1) {
+                    mapelSelect.innerHTML = '<option value="">--Data Gagal Dimuat--</option>';
+                }
                 const faseSelect = document.getElementById('input-fase');
-                if (faseSelect && !faseSelect.options.length) {
+                if (faseSelect && !faseSelect.options.length > 1) {
                     faseSelect.innerHTML = `
                         <option value="Fase D (Kelas 7)">Fase D (Kelas 7)</option>
                         <option value="Fase D (Kelas 8)">Fase D (Kelas 8)</option>
