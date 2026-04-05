@@ -151,7 +151,7 @@
         <div class="flex-1 flex overflow-hidden">
             
             <!-- Left Panel: Input Configuration (Hidden by Default with animation) -->
-            <div id="config-panel" class="w-0 opacity-0 overflow-hidden bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 transition-all duration-300 ease-in-out">
+            <div id="config-panel" class="bg-white border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 transition-all duration-500 ease-out overflow-hidden" style="width: 0px; min-width: 0px; opacity: 0; border-right-width: 0px;">
                 <div class="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-5">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -406,8 +406,10 @@
         function switchTab(tabId) {
             currentActiveTab = tabId;
             const panel = document.getElementById('config-panel');
-            panel.classList.remove('w-0', 'opacity-0');
-            panel.classList.add('w-1/3', 'min-w-[320px]', 'opacity-100');
+            panel.style.width = '33.333333%';
+            panel.style.minWidth = '320px';
+            panel.style.opacity = '1';
+            panel.style.borderRightWidth = '1px';
             // Update UI
             document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-target="${tabId}"]`).classList.add('active');
