@@ -2079,6 +2079,44 @@
             }
         }
 
+        function migrateQuestionTypes() {
+            if (!Array.isArray(db.questions)) return;
+            let changed = false;
+            const mapping = {
+                // Benar/Salah variants
+                'boolean': 'tf',
+                'benar_salah': 'tf',
+                'true_false': 'tf',
+                'bs': 'tf',
+                // Matching variants
+                'jodohkan': 'matching',
+                'pasangkan': 'matching',
+                'pairing': 'matching',
+                'match': 'matching',
+                // Essay variants
+                'essay': 'text',
+                'isian': 'text',
+                'uraian': 'text',
+                // PG variants
+                'pg': 'single',
+                'pilihan_ganda': 'single',
+                'multiple_choice': 'single'
+            };
+
+            db.questions.forEach(q => {
+                const oldType = String(q.type || 'single').toLowerCase().trim();
+                if (mapping[oldType]) {
+                    q.type = mapping[oldType];
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                console.log('[MIGRATION] Question types normalized.');
+                save();
+            }
+        }
+
         async function init() {
             const loginBtn = document.getElementById('login-btn');
             const loginBtnText = loginBtn ? loginBtn.innerHTML : '';
@@ -2153,6 +2191,7 @@
 
             // NOW run migration on the final loaded data
             migrateRombels();
+            migrateQuestionTypes();
 
             // Re-enable login
             if (loginBtn) {
