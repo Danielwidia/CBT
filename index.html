@@ -6098,10 +6098,22 @@
         }
 
         async function submitExam() {
-            isExamActive = false; // Disable anti-cheat immediately
+            // IMMEDIATE UI TRANSITION: Stop exam and hide screens before processing heavy data
+            isExamActive = false; 
             closeConfirmModal();
             closeCheatWarning();
             clearInterval(examData.timer);
+            
+            // Hide question UI immediately so it doesn't look "stuck"
+            document.getElementById('exam-screen').classList.add('hidden');
+            
+            // Show processing modal
+            const savingModal = document.getElementById('saving-modal');
+            if (savingModal) {
+                savingModal.classList.remove('hidden');
+                savingModal.classList.add('flex');
+            }
+
             let correctCount = 0;
 
             // VALIDASI: Pastikan questions dan answers punya panjang yang sama
@@ -6203,15 +6215,11 @@
 
             const score = totalItems ? ((correctCount / totalItems) * 100).toFixed(1) : 0;
 
-            // PENTING: Deep clone questions untuk menghindari reference issues
-            const savedQuestions = examData.questions.map(q => ({
-                ...q,
-                options: Array.isArray(q.options) ? [...q.options] : (q.options || []),
-                correct: q.correct !== undefined ? (Array.isArray(q.correct) ? [...q.correct] : q.correct) : q.correct,
-                images: Array.isArray(q.images) ? [...q.images] : (q.images || []),
-                questions: Array.isArray(q.questions) ? [...q.questions] : (q.questions || []),
-                answers: Array.isArray(q.answers) ? [...q.answers] : (q.answers || [])
-            }));
+            // NOTE: We no longer save full questions inside the result entry
+            // to keep the payload small and prevent 500 errors (Massive Redundancy Removed).
+            // Administrators can still view/re-score by looking up the questions 
+            // from the Bank Soal using mapel and rombel.
+            const savedQuestions = []; 
 
             // Transform matching answers from indices to strings before saving
             const savedAnswers = examData.answers.map((ans, i) => {
@@ -6237,13 +6245,6 @@
             updateCompletionCharts();
 
             try {
-                // Show modal first
-                const savingModal = document.getElementById('saving-modal');
-                if (savingModal) {
-                    savingModal.classList.remove('hidden');
-                    savingModal.classList.add('flex');
-                }
-
                 // 1. Mandatory Single Result Sync (The most critical part)
                 try {
                     await sendResult(newEntry);
@@ -6259,10 +6260,9 @@
                 }
             } finally {
                 // ALWAYS close the modal regardless of network state
-                const sm = document.getElementById('saving-modal');
-                if (sm) {
-                    sm.classList.add('hidden');
-                    sm.classList.remove('flex');
+                if (savingModal) {
+                    savingModal.classList.add('hidden');
+                    savingModal.classList.remove('flex');
                 }
             }
 
