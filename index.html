@@ -2431,6 +2431,7 @@
             let serverSaveSuccess = false;
             let retries = 3;
 
+            showToast('Menyimpan ke server...', 'info');
             while (retries > 0 && !serverSaveSuccess) {
                 try {
                     // Images are now synced with server to fix broken images in Supabase cross-device.
@@ -2460,8 +2461,11 @@
                 }
             }
 
-            if (!serverSaveSuccess) {
+            if (serverSaveSuccess) {
+                showToast('Perubahan tersimpan ke server!', 'success');
+            } else {
                 console.error('PERINGATAN: Gagal menyimpan ke server setelah 3 percobaan!');
+                showToast('Gagal menyimpan ke server! Periksa koneksi.', 'error');
             }
 
             // persist locally using IndexedDB (and notify other tabs via
@@ -6706,6 +6710,38 @@
             document.body.removeChild(fileDownload);
         }
 
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 px-6 py-3 rounded-2xl shadow-xl transform transition-all duration-300 translate-y-10 opacity-0`;
+            
+            if (type === 'success') {
+                toast.classList.add('bg-emerald-600', 'text-white');
+                toast.innerHTML = `<i class="fas fa-check-circle"></i> <span class="text-xs font-bold">${message}</span>`;
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-600', 'text-white');
+                toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span class="text-xs font-bold">${message}</span>`;
+            } else {
+                toast.classList.add('bg-sky-600', 'text-white');
+                toast.innerHTML = `<i class="fas fa-sync fa-spin"></i> <span class="text-xs font-bold">${message}</span>`;
+            }
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            // Auto hide
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-10px]', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, type === 'info' ? 1500 : 3000);
+        }
+
         function downloadKisiKisiPdf() {
             if (!currentKisiKisiData.length) return;
             const element = document.getElementById('kisi-kisi-result').cloneNode(true);
@@ -6763,6 +6799,8 @@
         });
 
     </script>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 left-6 z-[10000] flex flex-col gap-2 pointer-events-none"></div>
 </body>
 
 </html>

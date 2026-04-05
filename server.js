@@ -9,7 +9,8 @@ const { parseWordDocument } = require('./wordParser');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
 const rootPath = __dirname;
 
@@ -152,11 +153,13 @@ async function writeResults(results) {
                 mapel: r.mapel || '',
                 rombel: r.rombel || '',
                 date: r.date || new Date().toISOString(),
-                score: typeof r.score === 'string' ? parseFloat(r.score) : r.score,
+                score: typeof r.score === 'string' ? parseFloat(r.score) : (r.score || 0),
                 data: r
             }));
-            const { error } = await supabase.from('cbt_results').insert(records);
-            if (error) console.error('Supabase bulk insert error:', error.message);
+            const { error } = await supabase.from('cbt_results').upsert(records, { 
+                onConflict: 'student_id,mapel,rombel,date' 
+            });
+            if (error) console.error('Supabase bulk upsert error:', error.message);
         }
         return;
     }
