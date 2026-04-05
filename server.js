@@ -190,15 +190,17 @@ async function insertResultSingle(resultObj) {
                 });
             if (error) throw new Error('Supabase insertResultSingle(delete) error: ' + error.message);
         } else {
-            const { error } = await supabase.from('cbt_results').insert({
+            const { error } = await supabase.from('cbt_results').upsert({
                 student_id: resultObj.studentId || '',
                 mapel: resultObj.mapel || '',
                 rombel: resultObj.rombel || '',
                 date: resultObj.date || new Date().toISOString(),
                 score: typeof resultObj.score === 'string' ? parseFloat(resultObj.score) : resultObj.score,
                 data: resultObj
+            }, {
+                onConflict: 'student_id,mapel,rombel,date'
             });
-            if (error) throw new Error('Supabase insertResultSingle error: ' + error.message);
+            if (error) throw new Error('Supabase insertResultSingle(upsert) error: ' + error.message);
         }
     } else {
         const merged = mergeResults(await readResults(), [resultObj]);

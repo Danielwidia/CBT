@@ -5003,13 +5003,14 @@
                     const localCount = Array.isArray(db.results) ? db.results.length : 0;
                     const serverCount = Array.isArray(payload.results) ? payload.results.length : 0;
                     if (serverCount < localCount) {
-                        if (confirm('Data server memiliki lebih sedikit hasil ujian daripada data lokal. Ingin menggabungkan keduanya? (Cancel berarti tetap menggunakan data lokal)')) {
+                        const isAdmin = currentSiswa && currentSiswa.role === 'admin';
+                        const shouldMerge = isAdmin ? 
+                            confirm('Data server memiliki lebih sedikit hasil ujian daripada data lokal. Ingin menggabungkan keduanya? (Cancel berarti tetap menggunakan data lokal)') : 
+                            true; // Non-admin silently merges to preserve local work
+                        
+                        if (shouldMerge) {
                             db.results = mergeResults(db.results, payload.results);
-                            // preserve other server fields to keep metadata up-to-date
                             db = { ...payload, results: db.results };
-                        } else {
-                            // keep local db entirely
-                            // nothing to do
                         }
                     } else if (serverCount > localCount) {
                         // merge to pick up any extra entries
@@ -6227,41 +6228,34 @@
             db.results.push(newEntry);
             updateCompletionCharts();
 
-            // Tampilkan UI Loading Antrian
-            document.getElementById('confirm-finish-modal').classList.add('hidden');
-            document.getElementById('exam-screen').classList.add('hidden');
-
-            const savingModal = document.getElementById('saving-modal');
-            if (savingModal) {
-                savingModal.classList.remove('hidden');
-                savingModal.classList.add('flex');
-            }
-
-            // always persist locally so a page reload (or offline session) doesn't
-            // wipe out newly-submitted results.  We still try to push the single
-            // entry to the server first, but even if that succeeds we save the
-            // database immediately afterwards.  This mirrors the behaviour in
-            // save() and keeps the client-side copy in sync with whatever we
-            // managed to send upstream.
             try {
-                await sendResult(newEntry);
-            } catch (e) {
-                console.warn('failed to push individual result:', e.message || e);
-                // fall back to full save as a last resort
-            }
+                // Show modal first
+                const savingModal = document.getElementById('saving-modal');
+                if (savingModal) {
+                    savingModal.classList.remove('hidden');
+                    savingModal.classList.add('flex');
+                }
 
-            // persist the database regardless of network outcome; this will
-            // update IndexedDB/localStorage and re‑try sending the full db if
-            // necessary (save() handles its own retries).
-            try {
-                await save();
-            } catch (e) {
-                console.warn('auto-save after finishing exam failed:', e.message || e);
-            }
+                // 1. Mandatory Single Result Sync (The most critical part)
+                try {
+                    await sendResult(newEntry);
+                } catch (e) {
+                    console.warn('[SUBMIT] Direct result sync failed, relying on background save:', e.message || e);
+                }
 
-            if (savingModal) {
-                savingModal.classList.add('hidden');
-                savingModal.classList.remove('flex');
+                // 2. Background Full DB Save (Updates IndexedDB and triggers fallback sync)
+                try {
+                    await save();
+                } catch (e) {
+                    console.warn('[SUBMIT] Background database save encountered an issue:', e.message || e);
+                }
+            } finally {
+                // ALWAYS close the modal regardless of network state
+                const sm = document.getElementById('saving-modal');
+                if (sm) {
+                    sm.classList.add('hidden');
+                    sm.classList.remove('flex');
+                }
             }
 
             // refresh admin/teacher views if they're visible so the new score
