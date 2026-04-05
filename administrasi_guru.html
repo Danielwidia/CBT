@@ -176,17 +176,7 @@
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Mata Pelajaran</label>
                         <input type="text" list="mapel-list" id="input-mapel" placeholder="Ketik atau pilih mapel..." class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
                         <datalist id="mapel-list">
-                            <option value="Pendidikan Agama">
-                            <option value="Bahasa Indonesia">
-                            <option value="Matematika">
-                            <option value="Ilmu Pengetahuan Alam (IPA)">
-                            <option value="Ilmu Pengetahuan Sosial (IPS)">
-                            <option value="Bahasa Inggris">
-                            <option value="Informatika">
-                            <option value="Seni Budaya">
-                            <option value="Prakarya">
-                            <option value="PJOK">
-                            <option value="Muatan Lokal">
+                            <!-- Populated from database -->
                         </datalist>
                     </div>
 
@@ -194,9 +184,8 @@
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Fase / Kelas</label>
                             <select id="input-fase" class="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-semibold text-sm text-slate-700">
-                                <option value="Fase D (Kelas 7)">Fase D (Kelas 7)</option>
-                                <option value="Fase D (Kelas 8)">Fase D (Kelas 8)</option>
-                                <option value="Fase D (Kelas 9)">Fase D (Kelas 9)</option>
+                                <option value="">--Pilih Kelas--</option>
+                                <!-- Populated from database -->
                             </select>
                         </div>
                         <div>
@@ -394,6 +383,50 @@
 
         let currentActiveTab = null;
         let isGenerating = false;
+        let db = null;
+
+        const API_URL = localStorage.getItem('remote_server_url') || '';
+
+        async function loadAdminData() {
+            try {
+                const response = await fetch(API_URL + '/api/db');
+                if (!response.ok) throw new Error('Failed to fetch DB');
+                db = await response.json();
+
+                // Populate Mapel
+                const mapelList = document.getElementById('mapel-list');
+                if (mapelList && db.subjects) {
+                    mapelList.innerHTML = db.subjects.map(s => {
+                        const name = typeof s === 'string' ? s : s.name;
+                        return `<option value="${name}">`;
+                    }).join('');
+                }
+
+                // Populate Rombels / Fase
+                const faseSelect = document.getElementById('input-fase');
+                if (faseSelect && db.rombels) {
+                    faseSelect.innerHTML = '<option value="">--Pilih Kelas--</option>' + 
+                        db.rombels.map(r => `<option value="${r}">${r}</option>`).join('');
+                }
+                
+                console.log('Admin data loaded successfully');
+            } catch (err) {
+                console.warn('Could not load admin data from server:', err);
+                // Fallback to static options if server fails
+                const faseSelect = document.getElementById('input-fase');
+                if (faseSelect && !faseSelect.options.length) {
+                    faseSelect.innerHTML = `
+                        <option value="Fase D (Kelas 7)">Fase D (Kelas 7)</option>
+                        <option value="Fase D (Kelas 8)">Fase D (Kelas 8)</option>
+                        <option value="Fase D (Kelas 9)">Fase D (Kelas 9)</option>
+                    `;
+                }
+            }
+        }
+
+        // Run on load
+        window.addEventListener('DOMContentLoaded', loadAdminData);
+
 
         function previewLogoFile(event) {
             const file = event.target.files[0];
