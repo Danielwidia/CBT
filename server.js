@@ -201,7 +201,7 @@ async function insertResultSingle(resultObj) {
                 score: finalScore,
                 data: resultObj
             }, {
-                onConflict: 'student_id,mapel,rombel'
+                onConflict: 'student_id,mapel,rombel,date'
             });
             if (error) throw new Error('Supabase insertResultSingle(upsert) error: ' + error.message);
         }
