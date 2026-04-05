@@ -451,7 +451,6 @@
         const configPanel = document.getElementById('config-panel');
         
         function hidePanel() {
-            if (isGenerating) return; // Don't hide while processing
             configPanel.style.width = '0px';
             configPanel.style.minWidth = '0px';
             configPanel.style.opacity = '0';
@@ -466,7 +465,6 @@
         }
 
         function resetInactivityTimer() {
-            if (isGenerating) return;
             clearTimeout(inactivityTimer);
             const progressBar = document.getElementById('inactivity-progress');
             

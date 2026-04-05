@@ -41,7 +41,7 @@ const DEFAULT_DB = {
         { name: 'IPS',              locked: false },
         { name: 'Bahasa Inggris',   locked: false }
     ],
-    rombels:    ['VII', 'VIII', 'IX'],
+    rombels:    ['Fase D (Kelas 7)', 'Fase D (Kelas 8)', 'Fase D (Kelas 9)'],
     questions:  [],
     students:   [{ id: 'ADM', password: 'admin321', name: 'Administrator', role: 'admin' }],
     results:    [],
