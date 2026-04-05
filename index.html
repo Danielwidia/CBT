@@ -610,19 +610,19 @@
                             <h4 class="text-lg font-black text-slate-800 mb-4">Diagram Penyelesaian</h4>
                             <div class="space-y-4">
                                 <div class="text-center">
-                                    <h5 class="text-sm font-bold text-slate-600 mb-2">VII</h5>
+                                    <h5 class="text-sm font-bold text-slate-600 mb-2">Kelas 7</h5>
                                     <canvas id="completion-chart-vii" width="150" height="150"></canvas>
                                     <div id="completion-legend-vii" class="mt-2 text-xs text-slate-700 text-center">
                                     </div>
                                 </div>
                                 <div class="text-center">
-                                    <h5 class="text-sm font-bold text-slate-600 mb-2">VIII</h5>
+                                    <h5 class="text-sm font-bold text-slate-600 mb-2">Kelas 8</h5>
                                     <canvas id="completion-chart-viii" width="150" height="150"></canvas>
                                     <div id="completion-legend-viii" class="mt-2 text-xs text-slate-700 text-center">
                                     </div>
                                 </div>
                                 <div class="text-center">
-                                    <h5 class="text-sm font-bold text-slate-600 mb-2">IX</h5>
+                                    <h5 class="text-sm font-bold text-slate-600 mb-2">Kelas 9</h5>
                                     <canvas id="completion-chart-ix" width="150" height="150"></canvas>
                                     <div id="completion-legend-ix" class="mt-2 text-xs text-slate-700 text-center">
                                     </div>
@@ -2003,7 +2003,84 @@
         }
 
         // --- CORE FUNCTIONS ---
+        function migrateRombels() {
+            const legacyRombels = ['VII', 'VIII', 'IX'];
+            const hasLegacy = db.rombels && db.rombels.some(r => legacyRombels.includes(r));
+            
+            if (hasLegacy) {
+                console.log('[MIGRATION] Migrating rombels to Phase D format...');
+                
+                const mapping = {
+                    'VII': 'Fase D (Kelas 7)',
+                    'VIII': 'Fase D (Kelas 8)',
+                    'IX': 'Fase D (Kelas 9)'
+                };
+
+                // Update db.rombels
+                db.rombels = db.rombels.map(r => mapping[r] || r);
+                // Ensure unique and sorted
+                db.rombels = [...new Set(db.rombels)];
+
+                // Update questions
+                db.questions.forEach(q => {
+                    if (mapping[q.rombel]) q.rombel = mapping[q.rombel];
+                });
+
+                // Update students
+                db.students.forEach(s => {
+                    if (mapping[s.rombel]) s.rombel = mapping[s.rombel];
+                    if (s.role === 'teacher' && s.subjects) {
+                        s.subjects.forEach(subj => {
+                            if (subj.rombels) {
+                                subj.rombels = subj.rombels.map(r => mapping[r] || r);
+                            }
+                        });
+                    }
+                    if (s.role === 'teacher' && s.rombels) {
+                        s.rombels = s.rombels.map(r => mapping[r] || r);
+                    }
+                });
+
+                // Update results
+                db.results.forEach(r => {
+                    if (mapping[r.rombel]) r.rombel = mapping[r.rombel];
+                });
+
+                // Update schedules
+                if (db.schedules) {
+                    db.schedules = db.schedules.map(k => {
+                        const parts = k.split('|');
+                        if (parts.length === 2 && mapping[parts[0]]) {
+                            return `${mapping[parts[0]]}|${parts[1]}`;
+                        }
+                        return k;
+                    });
+                }
+                
+                // Update timeLimits (keys are usually stored as lowercase)
+                if (db.timeLimits) {
+                    const newLimits = {};
+                    for (const k in db.timeLimits) {
+                        let newKey = k;
+                        for (const oldR in mapping) {
+                            if (k.toLowerCase().startsWith(oldR.toLowerCase() + '|')) {
+                                const subjectPart = k.split('|')[1] || '';
+                                newKey = (mapping[oldR] + '|' + subjectPart).toLowerCase().trim();
+                                break;
+                            }
+                        }
+                        newLimits[newKey] = db.timeLimits[k];
+                    }
+                    db.timeLimits = newLimits;
+                }
+
+                save();
+                console.log('[MIGRATION] Rombel migration complete.');
+            }
+        }
+
         async function init() {
+            migrateRombels();
             // SYNC: Fix any data consistency issues in results
             if (Array.isArray(db.results)) {
                 db.results.forEach((result, idx) => {
@@ -2417,16 +2494,20 @@
         }
 
         function updateCompletionCharts() {
-            const rombels = ['VII', 'VIII', 'IX'];
-            rombels.forEach(rombel => {
-                const canvasId = `completion-chart-${rombel.toLowerCase()}`;
-                const legendId = `completion-legend-${rombel.toLowerCase()}`;
+            const mappings = [
+                { id: 'vii', name: 'Fase D (Kelas 7)' },
+                { id: 'viii', name: 'Fase D (Kelas 8)' },
+                { id: 'ix', name: 'Fase D (Kelas 9)' }
+            ];
+            mappings.forEach(m => {
+                const canvasId = `completion-chart-${m.id}`;
+                const legendId = `completion-legend-${m.id}`;
                 const canvas = document.getElementById(canvasId);
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');
 
                 // Get students in this rombel
-                const studentsInRombel = db.students.filter(s => s.role === 'student' && s.rombel === rombel);
+                const studentsInRombel = db.students.filter(s => s.role === 'student' && s.rombel === m.name);
                 const total = studentsInRombel.length;
 
                 // Get students who have completed exams (have non-deleted results)
