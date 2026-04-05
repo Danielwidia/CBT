@@ -415,17 +415,96 @@ async function callGeminiAI(prompt) {
     }
 
     throw new Error(
-        (lastError || 'Semua model AI gagal') +
-        ' | Semua API key mungkin sudah habis kuota free-tier. Buat API key baru di https://aistudio.google.com/app/apikey'
+        (lastError || 'Semua model Gemini gagal') +
+        ' | Coba gunakan provider AI lain (OpenAI) atau periksa kunci API Anda.'
     );
 }
 
+/**
+ * Helper to call OpenAI / ChatGPT
+ */
+async function callOpenAI(prompt) {
+    const rawKey = process.env.OPENAI_API_KEY || '';
+    const keys = rawKey.split(',').map(k => k.trim()).filter(k => k);
+
+    console.log('[AI] OPENAI_API_KEY present:', rawKey.length > 0, '| Keys count:', keys.length);
+
+    if (keys.length === 0) throw new Error('OPENAI_API_KEY tidak dikonfigurasi di Environment Variables');
+
+    const models = ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'];
+    let lastError;
+
+    for (const model of models) {
+        for (const key of keys) {
+            try {
+                console.log(`[AI] Trying OpenAI model: ${model} with key: ${key.substring(0, 10)}...`);
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${key}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [{ role: 'user', content: prompt }]
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const result = data.choices?.[0]?.message?.content || '';
+                    console.log(`[AI] ✅ Success with OpenAI model: ${model}`);
+                    return result;
+                }
+
+                const errData = await response.json().catch(() => ({}));
+                const errMsg = errData.error?.message || response.statusText;
+                lastError = `${model}: HTTP ${response.status} - ${errMsg}`;
+
+                if (response.status === 429) {
+                    console.warn(`[AI] ⚠️ Quota/Rate limit exceeded: model=${model}`);
+                    continue; // coba key berikutnya
+                }
+
+                console.error(`[AI] Error with ${model}:`, lastError);
+
+            } catch (e) {
+                lastError = e.message;
+                console.error(`[AI] Fetch Error with OpenAI ${model}:`, e.message);
+            }
+        }
+    }
+    throw new Error('OpenAI gagal: ' + (lastError || 'Semua model OpenAI gagal'));
+}
+
+/**
+ * Unified AI caller with fallback mechanism
+ */
+async function callAI(prompt, preferredProvider = 'gemini') {
+    if (preferredProvider === 'openai') {
+        try {
+            return await callOpenAI(prompt);
+        } catch (e) {
+            console.warn(`[AI] OpenAI failed (${e.message}), falling back to Gemini...`);
+            return await callGeminiAI(prompt);
+        }
+    } else {
+        try {
+            return await callGeminiAI(prompt);
+        } catch (e) {
+            console.warn(`[AI] Gemini failed (${e.message}), falling back to OpenAI...`);
+            return await callOpenAI(prompt);
+        }
+    }
+}
+
 app.post('/api/generate-ai', async (req, res) => {
-    const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '' } = req.body;
+    const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '', provider = 'gemini' } = req.body;
     if (!materi) return res.status(400).json({ error: 'Materi is required' });
 
-    console.log(`[/api/generate-ai] Request: mapel=${mapel}, rombel=${rombel}, jumlah=${jumlah}, tipe=${tipe}`);
-    console.log(`[/api/generate-ai] GOOGLE_API_KEY configured: ${!!process.env.GOOGLE_API_KEY}`);
+    console.log(`[/api/generate-ai] Request: mapel=${mapel}, rombel=${rombel}, jumlah=${jumlah}, tipe=${tipe}, provider=${provider}`);
+    console.log(`[/api/generate-ai] API keys configured - Google: ${!!process.env.GOOGLE_API_KEY}, OpenAI: ${!!process.env.OPENAI_API_KEY}`);
 
     const typeMap = {
         single: 'pilihan ganda biasa (1 jawaban benar)',
@@ -439,7 +518,7 @@ app.post('/api/generate-ai', async (req, res) => {
     const prompt = `Buatkan ${jumlah} soal bertipe ${tipeDeskripsi} untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nBalas HANYA dengan JSON array valid tanpa markdown, contoh format:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
     
     try {
-        let text = await callGeminiAI(prompt);
+        let text = await callAI(prompt, provider);
         
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
@@ -460,7 +539,7 @@ app.post('/api/generate-ai', async (req, res) => {
 
 // ─── API: Generate Admin Doc ──────────────────────────────────────────────────
 app.post('/api/generate-admin-doc', async (req, res) => {
-    const { type, mapel, fase, semester, topik, extraData } = req.body;
+    const { type, mapel, fase, semester, topik, extraData, provider } = req.body;
     
     if (!mapel || !topik) {
         return res.status(400).json({ error: 'Mapel dan Topik diwajibkan' });
@@ -507,7 +586,7 @@ Berikan juga CSS inline jika dibutuhkan untuk struktur tabel (seperti: <table bo
 DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG menggunakan markdown block (seperti \`\`\`html). Output harus 100% kode HTML mentah.`;
 
     try {
-        let text = await callGeminiAI(fullPrompt);
+        let text = await callAI(fullPrompt, provider || 'gemini');
         
         // Membersihkan markdown wrapper (```html ... ```) jika AI membocorkannya
         text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
@@ -522,7 +601,7 @@ DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG meng
 
 // ─── API: Kisi-kisi Generate ──────────────────────────────────────────────────
 app.post('/api/generate-kisi-kisi', async (req, res) => {
-    const { questions, mapel = '', rombel = '' } = req.body;
+    const { questions, mapel = '', rombel = '', provider = 'gemini' } = req.body;
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
         return res.status(400).json({ error: 'Questions are required' });
     }
@@ -543,7 +622,7 @@ app.post('/api/generate-kisi-kisi', async (req, res) => {
         `Hanya kembalikan JSON array saja tanpa markdown code block.`;
 
     try {
-        let text = await callGeminiAI(prompt);
+        let text = await callAI(prompt, provider);
         
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
