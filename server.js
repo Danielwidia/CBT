@@ -479,31 +479,23 @@ async function callOpenAI(prompt) {
 }
 
 /**
- * Unified AI caller with fallback mechanism
+ * Unified AI caller with fully automatic fallback mechanism
  */
-async function callAI(prompt, preferredProvider = 'gemini') {
-    if (preferredProvider === 'openai') {
-        try {
-            return await callOpenAI(prompt);
-        } catch (e) {
-            console.warn(`[AI] OpenAI failed (${e.message}), falling back to Gemini...`);
-            return await callGeminiAI(prompt);
-        }
-    } else {
-        try {
-            return await callGeminiAI(prompt);
-        } catch (e) {
-            console.warn(`[AI] Gemini failed (${e.message}), falling back to OpenAI...`);
-            return await callOpenAI(prompt);
-        }
+async function callAI(prompt) {
+    try {
+        // Coba OpenAI (ChatGPT) lebih dulu karena unggul di struktur
+        return await callOpenAI(prompt);
+    } catch (e) {
+        console.warn(`[AI] OpenAI failed (${e.message}), automatically falling back to Gemini...`);
+        return await callGeminiAI(prompt);
     }
 }
 
 app.post('/api/generate-ai', async (req, res) => {
-    const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '', provider = 'gemini' } = req.body;
+    const { materi, jumlah = 5, tipe = 'single', mapel = '', rombel = '' } = req.body;
     if (!materi) return res.status(400).json({ error: 'Materi is required' });
 
-    console.log(`[/api/generate-ai] Request: mapel=${mapel}, rombel=${rombel}, jumlah=${jumlah}, tipe=${tipe}, provider=${provider}`);
+    console.log(`[/api/generate-ai] Request: mapel=${mapel}, rombel=${rombel}, jumlah=${jumlah}, tipe=${tipe}`);
     console.log(`[/api/generate-ai] API keys configured - Google: ${!!process.env.GOOGLE_API_KEY}, OpenAI: ${!!process.env.OPENAI_API_KEY}`);
 
     const typeMap = {
@@ -518,7 +510,7 @@ app.post('/api/generate-ai', async (req, res) => {
     const prompt = `Buatkan ${jumlah} soal bertipe ${tipeDeskripsi} untuk mata pelajaran ${mapel} kelas ${rombel} tentang: ${materi}.\nBalas HANYA dengan JSON array valid tanpa markdown, contoh format:\n[{"text":"Pertanyaan?","options":["A","B","C","D"],"correct":0,"mapel":"${mapel}","rombel":"${rombel}","type":"${tipe}"}]`;
     
     try {
-        let text = await callAI(prompt, provider);
+        let text = await callAI(prompt);
         
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
@@ -539,7 +531,7 @@ app.post('/api/generate-ai', async (req, res) => {
 
 // ─── API: Generate Admin Doc ──────────────────────────────────────────────────
 app.post('/api/generate-admin-doc', async (req, res) => {
-    const { type, mapel, fase, semester, topik, extraData, provider } = req.body;
+    const { type, mapel, fase, semester, topik, extraData } = req.body;
     
     if (!mapel || !topik) {
         return res.status(400).json({ error: 'Mapel dan Topik diwajibkan' });
@@ -567,12 +559,22 @@ app.post('/api/generate-admin-doc', async (req, res) => {
         docType = `Soal dan Kunci Jawaban`;
         promptText = `Buatkan instrumen Soal dan Kunci Jawaban untuk mata pelajaran ${mapel} fase ${fase} materi "${topik}". Rincian jumlah dan bentuk soal yang diharapkan adalah: ${extraData?.jumlahPerBentuk || '5 soal Pilihan Ganda'}. Usahakan tipe soal HOTS (Higher Order Thinking Skills). Berikan juga pembahasan singkat untuk masing-masing soal.`;
         
-        if (extraData?.opsiGambar) {
-            promptText += `\nUntuk menambah kualitas, sisipkan BUKTI GAMBAR/ILUSTRASI pada beberapa soal menggunakan tag HTML <img src="https://placehold.co/400x300?text=[Kata+Kunci]" alt="Ilustrasi"> (Ganti [Kata+Kunci] dengan deskripsi gambar, misal text=Sistem+Pencernaan).`;
+        if (extraData?.opsiGambar === 'placeholder') {
+            promptText += `\nUntuk soal yang memerlukan ilustrasi gambar, JANGAN gunakan placeholder gambar biasa. Gunakan blok HTML berikut sebagai "Area Ilustrasi" agar terlihat profesional:\n<div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; background-color: #f8fafc; margin: 15px 0;"><i class="fas fa-image" style="font-size: 32px; color: #94a3b8; margin-bottom: 10px; display: block;"></i><p style="font-weight: bold; color: #475569; margin: 0; font-size: 14px;">[Area Ilustrasi: DESKRIPSI_GAMBAR]</p><p style="font-size: 11px; color: #94a3b8; margin-top: 5px;">(Guru dapat menyisipkan gambar spesifik di sini)</p></div>\nGanti teks DESKRIPSI_GAMBAR dengan nama/objek gambar yang relevan (misal: "Struktur Akar Tumbuhan").`;
+        } else if (extraData?.opsiGambar === 'auto') {
+            promptText += `\nUntuk soal yang memerlukan ilustrasi gambar, tampilkan gambar asli secara otomatis dengan memanfaatkan layanan pihak ketiga menggunakan tag HTML ini: <br><img src="https://image.pollinations.ai/prompt/[ENGLISH_VISUAL_DESCRIPTION]?width=500&height=300&nologo=true" alt="Ilustrasi AI" style="border-radius: 8px; margin: 15px 0; max-width: 100%; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0;">\nGantikan [ENGLISH_VISUAL_DESCRIPTION] dengan deskripsi visual yang sangat detail dalam BAHASA INGGRIS yang merangkum maksud soal (misalnya: "detailed educational anatomical cross section diagram of human heart on white background"). Semakin detail instruksinya, gambar akan tampil semakin akurat.`;
         }
         
         if (extraData?.generateKisiKisi) {
             promptText += `\n\nPenting: Berdasarkan soal-soal yang Anda buat, buatkan juga matriks KISI-KISI UJIAN yang menjadi panduannya (Lengkap dengan Indikator Soal dan Level Kognitif) dan tampilkan matriks tersebut pada bagian PALING ATAS / AWAL dari dokumen sebelum daftar soal.`;
+        }
+        
+        if (extraData?.pisahLembar) {
+            promptText += `\nPenting: Karena fitur 'Pisahkan Halaman' diaktifkan, Anda WAJIB menyisipkan tag HTML ini: <div style="page-break-before: always;"></div> tepat sebelum judul "KUNCI JAWABAN" dimulai.`;
+        }
+
+        if (extraData?.simpanBankSoal) {
+            promptText += `\nSANGAT PENTING (INSTRUKSI DATABASE): Pada bagian PALING AKHIR dokumen dokumen HTML Anda, sematkan array JSON data soal-soal tersebut HANYA di dalam tag ini persis: <script id="ai-json-data" type="application/json"> [ARRAY_JSON] </script>. ARRAY_JSON adalah format pertanyaan seperti ini: { "text": "Pertanyaan?", "options": ["A","B","C","D"], "correct": 0, "type": "single", "mapel": "${mapel}", "rombel": "${fase}" }. Opsi array kosongkan untuk tipe Isian/Benar-Salah/Menjodohkan. Correct dapat berupa indeks jawaban (untuk PG) atau string kunci jawaban.`;
         }
     } else {
         return res.status(400).json({ error: 'Tipe dokumen tidak valid' });
@@ -586,13 +588,42 @@ Berikan juga CSS inline jika dibutuhkan untuk struktur tabel (seperti: <table bo
 DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG menggunakan markdown block (seperti \`\`\`html). Output harus 100% kode HTML mentah.`;
 
     try {
-        let text = await callAI(fullPrompt, provider || 'gemini');
+        let text = await callAI(fullPrompt);
         
         // Membersihkan markdown wrapper (```html ... ```) jika AI membocorkannya
         text = text.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
+        // Cek apakah ada script JSON Bank Soal
+        let parsedQuestions = null;
+        if (extraData?.simpanBankSoal) {
+            const match = text.match(/<script id="ai-json-data"[^>]*>([\s\S]*?)<\/script>/i);
+            if (match && match[1]) {
+                try {
+                    parsedQuestions = JSON.parse(match[1].trim());
+                    // Tambahkan ke database
+                    const db = (await readDB()) || { questions: [] };
+                    if (!db.questions) db.questions = [];
+                    // Inject basic standard properties
+                    parsedQuestions = parsedQuestions.map(q => ({
+                        ...q,
+                        mapel: q.mapel || mapel,
+                        rombel: q.rombel || fase,
+                        type: q.type || 'single'
+                    }));
+                    db.questions = [...db.questions, ...parsedQuestions];
+                    await writeDB(db);
+                    console.log(`[AI Bank Soal] Successfully saved ${parsedQuestions.length} questions to database.`);
+                    
+                    // Hilangkan tag script dari HTML render
+                    text = text.replace(match[0], '');
+                } catch (parseError) {
+                    console.error('[AI Bank Soal] Failed to parse generated JSON:', parseError);
+                }
+            }
+        }
+
         console.log(`[/api/generate-admin-doc] Success for ${docType}`);
-        return res.json({ ok: true, html: text });
+        return res.json({ ok: true, html: text, savedToBankSoal: !!parsedQuestions });
     } catch (e) {
         console.error('[/api/generate-admin-doc] Fatal error:', e.message);
         return res.status(500).json({ error: e.message });
@@ -601,7 +632,7 @@ DILARANG memberikan kalimat pembuka atau penutup di luar tag HTML. DILARANG meng
 
 // ─── API: Kisi-kisi Generate ──────────────────────────────────────────────────
 app.post('/api/generate-kisi-kisi', async (req, res) => {
-    const { questions, mapel = '', rombel = '', provider = 'gemini' } = req.body;
+    const { questions, mapel = '', rombel = '' } = req.body;
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
         return res.status(400).json({ error: 'Questions are required' });
     }
@@ -622,7 +653,7 @@ app.post('/api/generate-kisi-kisi', async (req, res) => {
         `Hanya kembalikan JSON array saja tanpa markdown code block.`;
 
     try {
-        let text = await callAI(prompt, provider);
+        let text = await callAI(prompt);
         
         // Clean up JSON response
         text = text.replace(/```json\n?|```/g, '').trim();
